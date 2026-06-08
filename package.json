@@ -1,0 +1,33 @@
+{
+  "name": "telegram-bot",
+  "version": "1.0.0",
+  "description": "Bot de Telegram con TypeScript, Telegraf v4, clima, traducción y administración de grupos",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:prod": "pm2 start dist/index.js --name telegram-bot"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "typescript",
+    "telegraf"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.17.0",
+    "dotenv": "^17.4.2",
+    "node-cache": "^5.1.2",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
