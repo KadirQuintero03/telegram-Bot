@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,4 +17,6 @@ export const config = {
   logLevel: process.env['LOG_LEVEL'] ?? 'info',
   maxDeleteMessages: parseInt(process.env['MAX_DELETE_MESSAGES'] ?? '100', 10),
   weatherCacheTtlMinutes: parseInt(process.env['WEATHER_CACHE_TTL_MINUTES'] ?? '10', 10),
+  // Ruta de almacenamiento: usa la variable de entorno o por defecto una carpeta local
+  filesStoragePath: path.resolve(process.env['FILES_STORAGE_PATH'] ?? './filesBotTelegram'),
 };

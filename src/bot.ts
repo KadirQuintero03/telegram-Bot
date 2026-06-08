@@ -3,6 +3,7 @@ import { BotContext } from './types/bot.types.js';
 import { config } from './config/env.js';
 import { loggerMiddleware } from './middlewares/logger.middleware.js';
 import { registerAllCommands } from './commands/index.js';
+import { registerMediaHandlers } from './handlers/media.handler.js';  // 👈 NUEVO
 
 export function createBot(): Telegraf<BotContext> {
   const bot = new Telegraf<BotContext>(config.botToken);
@@ -12,6 +13,9 @@ export function createBot(): Telegraf<BotContext> {
 
   // ── Comandos ─────────────────────────────────────────────────────
   registerAllCommands(bot);
+
+  // ── Handlers de media ─────────────────────────────────────────── // 👈 NUEVO
+  registerMediaHandlers(bot);                                          // 👈 NUEVO
 
   // ── Manejo global de errores ──────────────────────────────────────
   bot.catch((err, ctx) => {
