@@ -2,42 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
-import { config } from '../config/env.js';
 import { MediaCategory, CATEGORY_DIRS } from '../types/media.types.js';
 
 export class FileStorageService {
-    private basePath: string;
 
-    constructor() {
-        this.basePath = config.filesStoragePath;
-        this.ensureDirectories();
-    }
-
-    // Crea la estructura de carpetas si no existe
-    private ensureDirectories(): void {
-        // Carpeta raíz filesBotTelegram (o la que defina el usuario)
-        if (!fs.existsSync(this.basePath)) {
-            fs.mkdirSync(this.basePath, { recursive: true });
-            console.info(`[FileStorage] Directorio raíz creado: ${this.basePath}`);
-        }
-
-        // Subcarpetas por categoría
-        for (const dir of Object.values(CATEGORY_DIRS)) {
-            const fullPath = path.join(this.basePath, dir);
-            if (!fs.existsSync(fullPath)) {
-                fs.mkdirSync(fullPath, { recursive: true });
-                console.info(`[FileStorage] Subdirectorio creado: ${fullPath}`);
-            }
-        }
-    }
-
-    // Descarga un archivo desde una URL y lo guarda en la carpeta correcta
+    // Descarga un archivo desde una URL y lo guarda en la carpeta del usuario
     async downloadAndSave(
         fileUrl: string,
         fileName: string,
-        category: MediaCategory
+        category: MediaCategory,
+        userFolder: string        
     ): Promise<string> {
-        const categoryDir = path.join(this.basePath, CATEGORY_DIRS[category]);
+        const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]); // 👈 cambiado
         const safeFileName = this.sanitizeFileName(fileName);
         const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
 
@@ -75,7 +51,6 @@ export class FileStorageService {
 
             protocol
                 .get(url, (response) => {
-                    // Seguir redirecciones
                     if (response.statusCode === 301 || response.statusCode === 302) {
                         const redirectUrl = response.headers.location;
                         if (redirectUrl) {

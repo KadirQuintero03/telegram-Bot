@@ -1,29 +1,51 @@
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
 import { FileStorageService } from '../services/fileStorage.service.js';
+import { userRegistry } from '../services/userRegistry.service.js';
 import { MediaCategory } from '../types/media.types.js';
 import path from 'path';
 
 const storage = new FileStorageService();
 
-// Obtiene la URL de descarga de un archivo por su file_id
 async function getFileUrl(ctx: BotContext, fileId: string): Promise<string> {
     const file = await ctx.telegram.getFile(fileId);
     const token = ctx.telegram.token;
     return `https://api.telegram.org/file/bot${token}/${file.file_path}`;
 }
 
-// Responde con el resultado de la descarga
+// ── NUEVO: resuelve la carpeta del usuario o avisa que debe registrarse ──
+async function resolveUserFolder(ctx: BotContext): Promise<string | null> {
+    const userId = ctx.from?.id;
+    if (!userId) return null;
+
+    const folder = userRegistry.getFolderByTelegramId(userId);
+
+    if (!folder) {
+        await ctx.reply(
+            '⚠️ Primero escribe /start para registrarte\\.',
+            { parse_mode: 'MarkdownV2' }
+        );
+        return null;
+    }
+
+    return folder;
+}
+
 async function handleDownload(
     ctx: BotContext,
     fileId: string,
     fileName: string,
     category: MediaCategory
 ): Promise<void> {
+    // ── NUEVO: obtener carpeta del usuario antes de descargar ──
+    const userFolder = await resolveUserFolder(ctx);
+    if (!userFolder) return;
+
     try {
         await ctx.sendChatAction('upload_document');
         const fileUrl = await getFileUrl(ctx, fileId);
-        const savedPath = await storage.downloadAndSave(fileUrl, fileName, category);
+        // ── NUEVO: se pasa userFolder al servicio ──
+        const savedPath = await storage.downloadAndSave(fileUrl, fileName, category, userFolder);
 
         const shortPath = path.basename(savedPath);
         await ctx.reply(
@@ -51,50 +73,33 @@ function getCategoryEmoji(category: MediaCategory): string {
 }
 
 export function registerMediaHandlers(bot: Telegraf<BotContext>): void {
-    // ── Imágenes ────────────────────────────────────────────────────
     bot.on('photo', async (ctx) => {
-        // Telegram envía varias resoluciones; tomamos la de mayor calidad (última)
         const photos = ctx.message.photo;
         const photo = photos[photos.length - 1];
         if (!photo) return;
-
-        const fileId = photo.file_id;
-        const fileName = `foto_${Date.now()}.jpg`;
-        await handleDownload(ctx, fileId, fileName, 'Imagenes');
+        await handleDownload(ctx, photo.file_id, `foto_${Date.now()}.jpg`, 'Imagenes');
     });
 
-    // ── Videos ──────────────────────────────────────────────────────
     bot.on('video', async (ctx) => {
         const video = ctx.message.video;
-        const fileName = video.file_name ?? `video_${Date.now()}.mp4`;
-        await handleDownload(ctx, video.file_id, fileName, 'Video');
+        await handleDownload(ctx, video.file_id, video.file_name ?? `video_${Date.now()}.mp4`, 'Video');
     });
 
-    // ── Notas de voz (mensajes de voz grabados en Telegram) ─────────
     bot.on('voice', async (ctx) => {
-        const voice = ctx.message.voice;
-        const fileName = `nota_voz_${Date.now()}.ogg`;
-        await handleDownload(ctx, voice.file_id, fileName, 'Audio');
+        await handleDownload(ctx, ctx.message.voice.file_id, `nota_voz_${Date.now()}.ogg`, 'Audio');
     });
 
-    // ── Audios (archivos de música enviados como audio) ─────────────
     bot.on('audio', async (ctx) => {
         const audio = ctx.message.audio;
-        const fileName = audio.file_name ?? `audio_${Date.now()}.mp3`;
-        await handleDownload(ctx, audio.file_id, fileName, 'Audio');
+        await handleDownload(ctx, audio.file_id, audio.file_name ?? `audio_${Date.now()}.mp3`, 'Audio');
     });
 
-    // ── Documentos (PDF, Word, ZIP, etc.) ───────────────────────────
     bot.on('document', async (ctx) => {
         const doc = ctx.message.document;
-        const fileName = doc.file_name ?? `documento_${Date.now()}`;
-        await handleDownload(ctx, doc.file_id, fileName, 'Documentos');
+        await handleDownload(ctx, doc.file_id, doc.file_name ?? `documento_${Date.now()}`, 'Documentos');
     });
 
-    // ── Video notas (los círculos de video de Telegram) ─────────────
     bot.on('video_note', async (ctx) => {
-        const note = ctx.message.video_note;
-        const fileName = `video_nota_${Date.now()}.mp4`;
-        await handleDownload(ctx, note.file_id, fileName, 'Video');
+        await handleDownload(ctx, ctx.message.video_note.file_id, `video_nota_${Date.now()}.mp4`, 'Video');
     });
 }
