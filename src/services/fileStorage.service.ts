@@ -11,13 +11,31 @@ export class FileStorageService {
         fileUrl: string,
         fileName: string,
         category: MediaCategory,
-        userFolder: string        
+        userFolder: string
     ): Promise<string> {
         const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]); // 👈 cambiado
         const safeFileName = this.sanitizeFileName(fileName);
         const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
 
         await this.downloadFile(fileUrl, finalPath);
+
+        console.info(`[FileStorage] Archivo guardado: ${finalPath}`);
+        return finalPath;
+    }
+
+    // Guarda un Buffer ya descargado en memoria (ej: video de TikTok) en la carpeta del usuario
+    async saveBuffer(
+        buffer: Buffer,
+        fileName: string,
+        category: MediaCategory,
+        userFolder: string
+    ): Promise<string> {
+        const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]);
+        const safeFileName = this.sanitizeFileName(fileName);
+        const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
+
+        fs.mkdirSync(categoryDir, { recursive: true });
+        fs.writeFileSync(finalPath, buffer);
 
         console.info(`[FileStorage] Archivo guardado: ${finalPath}`);
         return finalPath;
