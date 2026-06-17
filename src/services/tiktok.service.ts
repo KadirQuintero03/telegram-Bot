@@ -1,145 +1,130 @@
 import axios from 'axios';
-import { TikTokRawItemStruct, TikTokVideoInfo } from '../types/tiktok.types.js';
+import { config } from '../config/env.js';
 
-// ── Headers que imitan un navegador real ───────────────────────────
-// TikTok bloquea peticiones sin un User-Agent "creíble". No es una API
-// de terceros: simplemente le pedimos la misma página HTML que vería
-// cualquier persona al abrir el enlace en su navegador.
-const BROWSER_HEADERS = {
+const REQUEST_TIMEOUT_MS = 60000;
+
+// Headers de respaldo: solo se usan si la respuesta del downloader es un
+// JSON que apunta a una URL directa del CDN de TikTok (esa sí los necesita).
+const FALLBACK_HEADERS = {
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
         '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+    Referer: 'https://www.tiktok.com/',
 };
-
-const PAGE_TIMEOUT_MS = 15000;
-const DOWNLOAD_TIMEOUT_MS = 60000;
 
 export class TikTokService {
     /**
-     * Descarga el HTML público del video y extrae:
-     * - La URL de descarga sin marca de agua (mejor calidad disponible)
-     * - Descripción, autor, duración y portada
+     * Descarga el video delegando la extracción a un servicio propio
+     * (self-hosted) configurado en TIKTOK_DOWNLOADER_BASE_URL.
      *
-     * No usa ninguna API externa de descarga: solo lee el JSON que TikTok
-     * embebe en su propia página web (lo mismo que hace el navegador).
+     * Soporta dos formas de respuesta del endpoint, ya que no conocemos
+     * el formato exacto hasta probarlo en vivo:
+     *  - Binario directo (content-type "video/*" u "octet-stream"): se usa tal cual.
+     *  - JSON con una URL de video embebida: se busca esa URL y se descarga aparte.
      */
-    async getVideoInfo(url: string): Promise<TikTokVideoInfo> {
-        const html = await this.fetchHtml(url);
-
-        const itemStruct =
-            this.extractFromUniversalData(html) ?? this.extractFromSigiState(html);
-
-        if (!itemStruct) {
+    async downloadVideo(postUrl: string): Promise<Buffer> {
+        const baseUrl = config.tiktokDownloaderBaseUrl;
+        if (!baseUrl) {
             throw new Error(
-                'No se pudo leer la información del video. El enlace puede ser privado, haber expirado, ' +
-                'o TikTok cambió la estructura de su página.'
+                'Falta configurar TIKTOK_DOWNLOADER_BASE_URL en el .env con la URL de tu servicio de descarga.'
             );
         }
 
-        const video = itemStruct.video;
-        if (!video) {
-            throw new Error('El enlace no corresponde a un video válido de TikTok.');
-        }
+        const endpoint = `${baseUrl.replace(/\/+$/, '')}/api/v1/download`;
 
-        const downloadUrl = this.pickBestQualityUrl(video);
-        if (!downloadUrl) {
-            throw new Error('No se encontró una URL de video descargable para este enlace.');
-        }
-
-        return {
-            id: itemStruct.id ?? video.id ?? 'desconocido',
-            description: itemStruct.desc ?? '',
-            author: itemStruct.author?.uniqueId ?? itemStruct.author?.nickname ?? 'desconocido',
-            durationSeconds: video.duration ?? 0,
-            coverUrl: video.cover ?? video.originCover ?? '',
-            downloadUrl,
-        };
-    }
-
-    /**
-     * Descarga los bytes reales del video desde el CDN de TikTok.
-     * Se necesita el header "Referer" porque el CDN rechaza descargas
-     * que no parezcan provenir de tiktok.com.
-     */
-    async downloadVideoBuffer(downloadUrl: string): Promise<Buffer> {
-        const response = await axios.get<ArrayBuffer>(downloadUrl, {
+        const response = await axios.get(endpoint, {
+            params: { postUrl },
             responseType: 'arraybuffer',
-            timeout: DOWNLOAD_TIMEOUT_MS,
+            timeout: REQUEST_TIMEOUT_MS,
             maxRedirects: 5,
-            headers: {
-                ...BROWSER_HEADERS,
-                Referer: 'https://www.tiktok.com/',
-            },
         });
-        return Buffer.from(response.data);
+
+        const contentType = String(response.headers['content-type'] ?? '').toLowerCase();
+        const buffer = Buffer.from(response.data);
+
+        if (contentType.startsWith('video/') || contentType.includes('octet-stream')) {
+            return buffer;
+        }
+
+        if (contentType.includes('application/json')) {
+            return this.resolveFromJson(buffer);
+        }
+
+        // Content-type ambiguo o ausente: si el tamaño parece un video, lo aceptamos igual.
+        if (buffer.length > 50_000) {
+            return buffer;
+        }
+
+        throw new Error(
+            `Respuesta inesperada del servicio de descarga (content-type: ${contentType || 'desconocido'}, ${buffer.length} bytes).`
+        );
     }
 
     // ── Privados ─────────────────────────────────────────────────────
 
-    private async fetchHtml(url: string): Promise<string> {
-        // axios sigue automáticamente los redirects de los enlaces cortos
-        // (vm.tiktok.com / vt.tiktok.com / tiktok.com/t/...) hasta llegar
-        // a la página final del video.
-        const response = await axios.get<string>(url, {
-            timeout: PAGE_TIMEOUT_MS,
-            maxRedirects: 5,
-            responseType: 'text',
-            headers: BROWSER_HEADERS,
-        });
-        return response.data;
-    }
-
-    // Estructura actual (2023+): <script id="__UNIVERSAL_DATA_FOR_REHYDRATION__">
-    private extractFromUniversalData(html: string): TikTokRawItemStruct | null {
-        const match = html.match(
-            /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/
-        );
-        if (!match || !match[1]) return null;
-
+    private async resolveFromJson(buffer: Buffer): Promise<Buffer> {
+        let json: unknown;
         try {
-            const json = JSON.parse(match[1]);
-            const defaultScope = json?.__DEFAULT_SCOPE__ ?? {};
-            const detail = defaultScope['webapp.video-detail'];
-            const itemStruct = detail?.itemInfo?.itemStruct;
-            return itemStruct ?? null;
+            json = JSON.parse(buffer.toString('utf-8'));
         } catch {
-            return null;
+            throw new Error('El servicio de descarga devolvió una respuesta no válida (JSON corrupto).');
         }
-    }
 
-    // Estructura antigua / variante de fallback: <script id="SIGI_STATE">
-    private extractFromSigiState(html: string): TikTokRawItemStruct | null {
-        const match = html.match(/<script id="SIGI_STATE"[^>]*>([\s\S]*?)<\/script>/);
-        if (!match || !match[1]) return null;
-
-        try {
-            const json = JSON.parse(match[1]);
-            const itemModule = json?.ItemModule;
-            if (!itemModule) return null;
-            const firstKey = Object.keys(itemModule)[0];
-            return firstKey ? (itemModule[firstKey] as TikTokRawItemStruct) : null;
-        } catch {
-            return null;
-        }
-    }
-
-    // Recorre las variantes de calidad (bitrateInfo) y elige la de mayor bitrate.
-    // Estas URLs corresponden al "playAddr" (reproducción), que en TikTok no
-    // lleva la marca de agua que sí se incrusta en el "downloadAddr" oficial.
-    private pickBestQualityUrl(video: NonNullable<TikTokRawItemStruct['video']>): string | null {
-        const bitrateInfo = video.bitrateInfo;
-
-        if (Array.isArray(bitrateInfo) && bitrateInfo.length > 0) {
-            const best = bitrateInfo.reduce((prev, current) =>
-                (current?.Bitrate ?? 0) > (prev?.Bitrate ?? 0) ? current : prev
+        const videoUrl = this.findVideoUrl(json);
+        if (!videoUrl) {
+            throw new Error(
+                'No se encontró una URL de video dentro de la respuesta JSON del servicio de descarga.'
             );
-            const urlList = best?.PlayAddr?.UrlList ?? best?.playAddr?.urlList;
-            if (Array.isArray(urlList) && urlList.length > 0) {
-                return urlList[0] ?? null;
+        }
+
+        const response = await axios.get<ArrayBuffer>(videoUrl, {
+            responseType: 'arraybuffer',
+            timeout: REQUEST_TIMEOUT_MS,
+            maxRedirects: 5,
+            headers: FALLBACK_HEADERS,
+        });
+
+        return Buffer.from(response.data);
+    }
+
+    // Busca recursivamente, en cualquier nivel del JSON, un string que parezca
+    // una URL de video descargable. Revisa primero las claves más comunes
+    // usadas por este tipo de servicios antes de recorrer todo el objeto.
+    private findVideoUrl(value: unknown): string | null {
+        if (typeof value === 'string') {
+            const looksLikeVideoUrl =
+                /^https?:\/\/.+\.mp4(\?.*)?$/i.test(value) || /tiktokcdn|tiktokv\.com|muscdn/i.test(value);
+            return looksLikeVideoUrl ? value : null;
+        }
+
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const found = this.findVideoUrl(item);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        if (value && typeof value === 'object') {
+            const obj = value as Record<string, unknown>;
+            const priorityKeys = [
+                'noWatermark', 'no_watermark', 'play', 'playAddr',
+                'downloadUrl', 'download_url', 'url', 'video', 'data',
+            ];
+
+            for (const key of priorityKeys) {
+                if (key in obj) {
+                    const found = this.findVideoUrl(obj[key]);
+                    if (found) return found;
+                }
+            }
+
+            for (const key of Object.keys(obj)) {
+                const found = this.findVideoUrl(obj[key]);
+                if (found) return found;
             }
         }
 
-        return video.playAddr ?? video.play_addr?.url_list?.[0] ?? null;
+        return null;
     }
 }

@@ -45,6 +45,14 @@ export function validateTikTokUrl(
   return { valid: true, url };
 }
 
+export function parseTikTokUrlMeta(url: string): { username: string; videoId: string } {
+  const match = url.match(/tiktok\.com\/@([\w.-]+)\/video\/(\d+)/i);
+  return {
+    username: match?.[1] ?? 'tiktok',
+    videoId: match?.[2] ?? Date.now().toString(),
+  };
+}
+
 export function validateDeleteArg(
   text: string | undefined,
   max: number

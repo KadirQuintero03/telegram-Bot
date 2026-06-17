@@ -19,4 +19,5 @@ export const config = {
   weatherCacheTtlMinutes: parseInt(process.env['WEATHER_CACHE_TTL_MINUTES'] ?? '10', 10),
   // Ruta de almacenamiento: usa la variable de entorno o por defecto una carpeta local
   filesStoragePath: path.resolve(process.env['FILES_STORAGE_PATH'] ?? './filesBotTelegram'),
+  tiktokDownloaderBaseUrl: (process.env['TIKTOK_DOWNLOADER_BASE_URL'] ?? '').trim(),
 };

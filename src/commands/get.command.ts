@@ -3,7 +3,7 @@ import { BotContext } from '../types/bot.types.js';
 import { TikTokService } from '../services/tiktok.service.js';
 import { FileStorageService } from '../services/fileStorage.service.js';
 import { userRegistry } from '../services/userRegistry.service.js';
-import { validateTikTokUrl } from '../utils/validators.js';
+import { validateTikTokUrl, parseTikTokUrlMeta } from '../utils/validators.js';
 import { escapeMarkdown } from '../utils/formatters.js';
 
 const tiktokService = new TikTokService();
@@ -19,7 +19,6 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
             return;
         }
 
-        // ── Mismo patrón de registro que usa media.handler.ts ──
         const userId = ctx.from?.id;
         const userFolder = userId ? userRegistry.getFolderByTelegramId(userId) : null;
 
@@ -29,26 +28,19 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
         }
 
         try {
-            await ctx.sendChatAction('typing');
-            const info = await tiktokService.getVideoInfo(validation.url!);
-
             await ctx.sendChatAction('upload_video');
-            const buffer = await tiktokService.downloadVideoBuffer(info.downloadUrl);
+            const buffer = await tiktokService.downloadVideo(validation.url!);
 
-            const fileName = `tiktok_${info.author}_${info.id}.mp4`;
+            const { username, videoId } = parseTikTokUrlMeta(validation.url!);
+            const fileName = `tiktok_${username}_${videoId}.mp4`;
             const savedPath = await storage.saveBuffer(buffer, fileName, 'Video', userFolder);
-
-            const captionLines = [
-                '🎬 *Video de TikTok descargado sin marca de agua*',
-                `👤 Autor: *${escapeMarkdown(info.author)}*`,
-            ];
-            if (info.description) {
-                captionLines.push(`📝 ${escapeMarkdown(info.description.slice(0, 200))}`);
-            }
 
             await ctx.replyWithVideo(
                 { source: savedPath },
-                { caption: captionLines.join('\n'), parse_mode: 'MarkdownV2' }
+                {
+                    caption: `🎬 *Video de TikTok descargado*\n👤 Autor: *${escapeMarkdown(username)}*`,
+                    parse_mode: 'MarkdownV2',
+                }
             );
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
