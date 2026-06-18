@@ -6,6 +6,7 @@ import { registerClimaCommand } from './clima.command.js';
 import { registerTraducirCommand } from './traducir.command.js';
 import { registerBorrarCommand } from './borrar.command.js';
 import { registerGetCommand } from './get.command.js';
+import { registerEmailCommand } from './email.command.js';
 
 export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerStartCommand(bot);
@@ -14,4 +15,5 @@ export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerTraducirCommand(bot);
   registerBorrarCommand(bot);
   registerGetCommand(bot);
+  registerEmailCommand(bot);
 }

@@ -72,3 +72,36 @@ export function validateDeleteArg(
   }
   return { valid: true, count: n };
 }
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function validateEmailAddress(text: string | undefined): { valid: boolean; email?: string; error?: string } {
+  if (!text || text.trim().length === 0) {
+    return { valid: false, error: '⚠️ Debes indicar un correo de destino\\.' };
+  }
+  const email = text.trim();
+  if (!EMAIL_REGEX.test(email)) {
+    return { valid: false, error: '⚠️ El correo no tiene un formato válido\\.' };
+  }
+  return { valid: true, email };
+}
+
+export function validateEmailSubject(text: string | undefined): { valid: boolean; subject?: string; error?: string } {
+  if (!text || text.trim().length === 0) {
+    return { valid: false, error: '⚠️ Debes indicar un asunto\\.' };
+  }
+  if (text.trim().length > 200) {
+    return { valid: false, error: '⚠️ El asunto no puede superar los 200 caracteres\\.' };
+  }
+  return { valid: true, subject: text.trim() };
+}
+
+export function validateEmailBody(text: string | undefined): { valid: boolean; body?: string; error?: string } {
+  if (!text || text.trim().length === 0) {
+    return { valid: false, error: '⚠️ Debes indicar el cuerpo del correo\\.' };
+  }
+  if (text.trim().length > 4000) {
+    return { valid: false, error: '⚠️ El cuerpo no puede superar los 4000 caracteres\\.' };
+  }
+  return { valid: true, body: text.trim() };
+}
