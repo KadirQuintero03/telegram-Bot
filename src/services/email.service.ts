@@ -8,10 +8,13 @@ export class EmailService {
         this.transporter = nodemailer.createTransport({
             host: config.emailHost,
             port: config.emailPort,
-            secure: false, // STARTTLS en el puerto 587
+            secure: false,
             auth: {
                 user: config.emailUser,
                 pass: config.emailPass,
+            },
+            tls: {
+                rejectUnauthorized: false,
             },
         });
     }
