@@ -2,22 +2,37 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import http from 'http';
+import crypto from 'crypto';
 import { MediaCategory, CATEGORY_DIRS } from '../types/media.types.js';
 
 export class FileStorageService {
 
-    // Descarga un archivo desde una URL y lo guarda en la carpeta del usuario
+    // Descarga un archivo desde una URL y lo guarda en la carpeta del usuario.
+    // checkDuplicates: si es true, verifica por hash si el contenido ya existe
+    // en la categoría y, de ser así, no guarda una copia nueva.
     async downloadAndSave(
         fileUrl: string,
         fileName: string,
         category: MediaCategory,
-        userFolder: string
+        userFolder: string,
+        checkDuplicates = false
     ): Promise<string> {
-        const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]); // 👈 cambiado
+        const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]);
         const safeFileName = this.sanitizeFileName(fileName);
         const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
 
+        fs.mkdirSync(categoryDir, { recursive: true });
         await this.downloadFile(fileUrl, finalPath);
+
+        if (checkDuplicates) {
+            const buffer = fs.readFileSync(finalPath);
+            const duplicate = this.findDuplicateByHash(categoryDir, buffer, finalPath);
+            if (duplicate) {
+                fs.unlinkSync(finalPath);
+                console.info(`[FileStorage] Duplicado detectado, no se guarda: ${safeFileName}`);
+                return duplicate;
+            }
+        }
 
         console.info(`[FileStorage] Archivo guardado: ${finalPath}`);
         return finalPath;
@@ -28,13 +43,22 @@ export class FileStorageService {
         buffer: Buffer,
         fileName: string,
         category: MediaCategory,
-        userFolder: string
+        userFolder: string,
+        checkDuplicates = false
     ): Promise<string> {
         const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]);
+        fs.mkdirSync(categoryDir, { recursive: true });
+
+        if (checkDuplicates) {
+            const duplicate = this.findDuplicateByHash(categoryDir, buffer);
+            if (duplicate) {
+                console.info(`[FileStorage] Duplicado detectado, no se guarda: ${fileName}`);
+                return duplicate;
+            }
+        }
+
         const safeFileName = this.sanitizeFileName(fileName);
         const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
-
-        fs.mkdirSync(categoryDir, { recursive: true });
         fs.writeFileSync(finalPath, buffer);
 
         console.info(`[FileStorage] Archivo guardado: ${finalPath}`);
@@ -59,6 +83,32 @@ export class FileStorageService {
     // Limpia caracteres inválidos del nombre del archivo
     private sanitizeFileName(name: string): string {
         return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim() || 'archivo';
+    }
+
+    // Calcula el hash SHA-256 del contenido de un archivo
+    private hashBuffer(buffer: Buffer): string {
+        return crypto.createHash('sha256').update(buffer).digest('hex');
+    }
+
+    // Busca, dentro de una carpeta, un archivo cuyo contenido coincida por hash
+    private findDuplicateByHash(dir: string, buffer: Buffer, excludePath?: string): string | null {
+        if (!fs.existsSync(dir)) return null;
+        const targetHash = this.hashBuffer(buffer);
+        const entries = fs.readdirSync(dir);
+
+        for (const entry of entries) {
+            const entryPath = path.join(dir, entry);
+            if (entryPath === excludePath) continue;
+
+            try {
+                const existingBuffer = fs.readFileSync(entryPath);
+                if (this.hashBuffer(existingBuffer) === targetHash) return entryPath;
+            } catch {
+                continue;
+            }
+        }
+
+        return null;
     }
 
     // Descarga el archivo desde una URL usando http/https nativo

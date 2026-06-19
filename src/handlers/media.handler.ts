@@ -4,6 +4,7 @@ import { FileStorageService } from '../services/fileStorage.service.js';
 import { userRegistry } from '../services/userRegistry.service.js';
 import { MediaCategory } from '../types/media.types.js';
 import path from 'path';
+import { cloudSessionService } from '../services/cloudSession.service.js';
 
 const storage = new FileStorageService();
 
@@ -37,15 +38,17 @@ async function handleDownload(
     fileName: string,
     category: MediaCategory
 ): Promise<void> {
-    // ── NUEVO: obtener carpeta del usuario antes de descargar ──
     const userFolder = await resolveUserFolder(ctx);
     if (!userFolder) return;
 
+    const userId = ctx.from!.id;
+    const checkDuplicates = cloudSessionService.hasUsedCloud(userId);
+
     try {
+        
         await ctx.sendChatAction('upload_document');
         const fileUrl = await getFileUrl(ctx, fileId);
-        // ── NUEVO: se pasa userFolder al servicio ──
-        const savedPath = await storage.downloadAndSave(fileUrl, fileName, category, userFolder);
+        const savedPath = await storage.downloadAndSave(fileUrl, fileName, category, userFolder, checkDuplicates);
 
         const shortPath = path.basename(savedPath);
         await ctx.reply(
