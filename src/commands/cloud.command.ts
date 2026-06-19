@@ -73,14 +73,24 @@ function buildPageMessage(
 }
 
 export async function sendFiles(ctx: BotContext, filePaths: string[]): Promise<void> {
+    let failedCount = 0;
+
     for (const filePath of filePaths) {
         try {
             await ctx.sendChatAction('upload_document');
             await ctx.replyWithDocument({ source: filePath });
         } catch (error) {
+            failedCount++;
             const msg = error instanceof Error ? error.message : 'Error desconocido';
-            console.error(`[ERROR] /cloud sendFiles: ${msg}`);
+            console.error(`[ERROR] /cloud sendFiles (${filePath}): ${msg}`);
         }
+    }
+
+    if (failedCount > 0) {
+        await ctx.reply(
+            `⚠️ No se pudieron enviar *${failedCount}* de los *${filePaths.length}* archivos\\. Revisa los logs del bot\\.`,
+            { parse_mode: 'MarkdownV2' }
+        );
     }
 }
 
