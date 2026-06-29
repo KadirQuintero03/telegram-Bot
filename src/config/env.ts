@@ -20,7 +20,9 @@ export const config = {
   // Ruta de almacenamiento: usa la variable de entorno o por defecto una carpeta local
   filesStoragePath: path.resolve(process.env['FILES_STORAGE_PATH'] ?? './filesBotTelegram'),
   tiktokDownloaderBaseUrl: (process.env['TIKTOK_DOWNLOADER_BASE_URL'] ?? '').trim(),
-    emailHost: requireEnv('EMAIL_HOST'),
+  instagramDownloaderBaseUrl: (process.env['INSTAGRAM_DOWNLOADER_URL'] ?? '').trim(),
+  youtubeDownloaderBaseUrl: (process.env['YOUTUBE_DOWNLOADER_URL'] ?? '').trim(),
+  emailHost: requireEnv('EMAIL_HOST'),
   emailPort: parseInt(process.env['EMAIL_PORT'] ?? '587', 10),
   emailUser: requireEnv('EMAIL_USER'),
   emailPass: requireEnv('EMAIL_PASS'),

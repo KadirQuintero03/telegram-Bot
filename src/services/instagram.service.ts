@@ -5,7 +5,7 @@ const REQUEST_TIMEOUT_MS = 60_000;
 
 export class InstagramService {
     async downloadVideo(postUrl: string): Promise<Buffer> {
-        const baseUrl = config.tiktokDownloaderBaseUrl;
+        const baseUrl = config.instagramDownloaderBaseUrl;
         if (!baseUrl) {
             throw new Error('Falta configurar INSTAGRAM_DOWNLOADER_BASE_URL en el .env.');
         }
