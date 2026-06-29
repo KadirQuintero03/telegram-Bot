@@ -1,21 +1,51 @@
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
 import { TikTokService } from '../services/tiktok.service.js';
+import { InstagramService } from '../services/instagram.service.js';
+import { YouTubeService } from '../services/youtube.service.js';
 import { FileStorageService } from '../services/fileStorage.service.js';
 import { userRegistry } from '../services/userRegistry.service.js';
-import { validateTikTokUrl, parseTikTokUrlMeta } from '../utils/validators.js';
+import { validateDownloadUrl, SupportedPlatform } from '../utils/validators.js';
+import { parseTikTokUrlMeta } from '../utils/validators.js';
 import { escapeMarkdown } from '../utils/formatters.js';
 
 const tiktokService = new TikTokService();
+const instagramService = new InstagramService();
+const youtubeService = new YouTubeService();
 const storage = new FileStorageService();
 
 const DOWNLOADING_TEXT = '⏳ Descargando video\\.\\.\\.';
 const SENDING_TEXT = '📤 Enviando video\\.\\.\\.';
 
+const PLATFORM_LABELS: Record<SupportedPlatform, string> = {
+    tiktok: '🎬 *Video de TikTok descargado*',
+    instagram: '📸 *Video de Instagram descargado*',
+    youtube: '▶️ *Short de YouTube descargado*',
+};
+
+async function downloadByPlatform(
+    platform: SupportedPlatform,
+    url: string
+): Promise<Buffer> {
+    switch (platform) {
+        case 'tiktok': return tiktokService.downloadVideo(url);
+        case 'instagram': return instagramService.downloadVideo(url);
+        case 'youtube': return youtubeService.downloadVideo(url);
+    }
+}
+
+function buildFileName(platform: SupportedPlatform, url: string): string {
+    if (platform === 'tiktok') {
+        const { username, videoId } = parseTikTokUrlMeta(url);
+        return `tiktok_${username}_${videoId}.mp4`;
+    }
+    return `${platform}_${Date.now()}.mp4`;
+}
+
 export function registerGetCommand(bot: Telegraf<BotContext>): void {
     bot.command('get', async (ctx) => {
         const args = ctx.message.text.split(' ').slice(1).join(' ');
-        const validation = validateTikTokUrl(args);
+        const validation = validateDownloadUrl(args);
 
         if (!validation.valid) {
             await ctx.reply(validation.error ?? 'Error de validación.', { parse_mode: 'Markdown' });
@@ -30,8 +60,6 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
             return;
         }
 
-        // Mensaje de estado: "Descargando" → "Enviando" → se borra al terminar
-        // (o se reemplaza por el error si algo falla).
         const statusMsg = await ctx.reply(DOWNLOADING_TEXT, { parse_mode: 'MarkdownV2' });
 
         const updateStatus = async (text: string): Promise<void> => {
@@ -39,33 +67,30 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
                 await ctx.telegram.editMessageText(ctx.chat!.id, statusMsg.message_id, undefined, text, {
                     parse_mode: 'MarkdownV2',
                 });
-            } catch {
-                // El mensaje pudo haber sido borrado manualmente; no es crítico.
-            }
+            } catch { /* ya eliminado */ }
         };
 
         const deleteStatus = async (): Promise<void> => {
             try {
                 await ctx.telegram.deleteMessage(ctx.chat!.id, statusMsg.message_id);
-            } catch {
-                // Ya estaba eliminado; ignorar.
-            }
+            } catch { /* ya eliminado */ }
         };
 
         try {
             await ctx.sendChatAction('upload_video');
-            const buffer = await tiktokService.downloadVideo(validation.url!);
+
+            const { url, platform } = validation as { url: string; platform: SupportedPlatform };
+            const buffer = await downloadByPlatform(platform, url);
+            const fileName = buildFileName(platform, url);
 
             await updateStatus(SENDING_TEXT);
 
-            const { username, videoId } = parseTikTokUrlMeta(validation.url!);
-            const fileName = `tiktok_${username}_${videoId}.mp4`;
             const savedPath = await storage.saveBuffer(buffer, fileName, 'Video', userFolder);
 
             await ctx.replyWithVideo(
                 { source: savedPath },
                 {
-                    caption: `🎬 *Video de TikTok descargado*\n👤 Autor: *${escapeMarkdown(username)}*`,
+                    caption: PLATFORM_LABELS[platform],
                     parse_mode: 'MarkdownV2',
                 }
             );
@@ -74,7 +99,7 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
             console.error(`[ERROR] /get: ${msg}`);
-            await updateStatus(`❌ No pude completar la descarga del video\\.\n${escapeMarkdown(msg)}`);
+            await updateStatus(`❌ No pude completar la descarga\\.\n${escapeMarkdown(msg)}`);
         }
     });
 }

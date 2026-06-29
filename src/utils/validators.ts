@@ -105,3 +105,45 @@ export function validateEmailBody(text: string | undefined): { valid: boolean; b
   }
   return { valid: true, body: text.trim() };
 }
+
+export type SupportedPlatform = 'tiktok' | 'instagram' | 'youtube';
+
+const PLATFORM_PATTERNS: Record<SupportedPlatform, RegExp> = {
+  tiktok: /^https?:\/\/(www\.|vm\.|vt\.|m\.)?tiktok\.com\/.+/i,
+  instagram: /^https?:\/\/(www\.)?instagram\.com\/(p|reel|tv)\/[A-Za-z0-9_\-]+/i,
+  youtube: /^https?:\/\/(www\.)?(youtube\.com\/shorts\/[A-Za-z0-9_\-]+|youtu\.be\/[A-Za-z0-9_\-]+)/i,
+};
+
+export function detectPlatform(url: string): SupportedPlatform | null {
+  for (const [platform, regex] of Object.entries(PLATFORM_PATTERNS)) {
+    if (regex.test(url)) return platform as SupportedPlatform;
+  }
+  return null;
+}
+
+export function validateDownloadUrl(
+  text: string | undefined
+): { valid: boolean; url?: string; platform?: SupportedPlatform; error?: string } {
+  if (!text || text.trim().length === 0) {
+    return {
+      valid: false,
+      error:
+        '⚠️ Debes proporcionar un enlace. Ejemplos:\n' +
+        '`/get https://vm.tiktok.com/XXX`\n' +
+        '`/get https://www.instagram.com/reel/XXX`\n' +
+        '`/get https://youtube.com/shorts/XXX`',
+    };
+  }
+
+  const url = text.trim().split(/\s+/)[0]!;
+  const platform = detectPlatform(url);
+
+  if (!platform) {
+    return {
+      valid: false,
+      error: '⚠️ El enlace no es de TikTok, Instagram ni YouTube Shorts.',
+    };
+  }
+
+  return { valid: true, url, platform };
+}
