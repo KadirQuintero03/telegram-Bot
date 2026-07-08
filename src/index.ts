@@ -1,9 +1,18 @@
 import { createBot } from './bot.js';
+import { createExplorerServer } from './server/explorer.server.js';
+
+const EXPLORER_PORT = parseInt(process.env['EXPLORER_PORT'] ?? '3000', 10);
 
 async function main(): Promise<void> {
   console.info('[INFO] Iniciando bot de Telegram...');
 
   const bot = createBot();
+
+  // ── Servidor HTTP para que GlowPic (frontend) explore los archivos ──
+  const explorerApp = createExplorerServer();
+  explorerApp.listen(EXPLORER_PORT, () => {
+    console.info(`[INFO] ✅ Explorer server escuchando en http://localhost:${EXPLORER_PORT}`);
+  });
 
   // Manejo de señales del SO para apagado limpio
   process.once('SIGINT', () => {
