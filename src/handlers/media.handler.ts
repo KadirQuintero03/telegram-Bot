@@ -3,7 +3,6 @@ import { BotContext } from '../types/bot.types.js';
 import { FileStorageService } from '../services/fileStorage.service.js';
 import { userRegistry } from '../services/userRegistry.service.js';
 import { MediaCategory } from '../types/media.types.js';
-import path from 'path';
 import { cloudSessionService } from '../services/cloudSession.service.js';
 
 const storage = new FileStorageService();
@@ -32,6 +31,27 @@ async function resolveUserFolder(ctx: BotContext): Promise<string | null> {
     return folder;
 }
 
+// Reacciona al mensaje original que trajo el archivo (foto, video, doc, etc.)
+// en vez de enviar un mensaje nuevo. Evita el spam cuando se suben muchos archivos.
+// Telegram solo permite reaccionar con un set fijo de emojis (no acepta ✅/✖️ libremente).
+// Usamos los más cercanos disponibles: 👍 para éxito, 👎 para error.
+async function reactToMessage(ctx: BotContext, emoji: '👍' | '👎'): Promise<void> {
+    const chatId = ctx.chat?.id;
+    const messageId = ctx.message?.message_id;
+    if (!chatId || !messageId) return;
+
+    try {
+        await ctx.telegram.setMessageReaction(chatId, messageId, [
+            { type: 'emoji', emoji },
+        ]);
+    } catch (reactionError) {
+        // Si la reacción falla (ej: bot sin permisos), no interrumpe el flujo,
+        // pero queda registrado en consola para depurar.
+        const msg = reactionError instanceof Error ? reactionError.message : 'Error desconocido';
+        console.error(`[WARN] No se pudo reaccionar al mensaje ${messageId}: ${msg}`);
+    }
+}
+
 async function handleDownload(
     ctx: BotContext,
     fileId: string,
@@ -45,34 +65,19 @@ async function handleDownload(
     const checkDuplicates = cloudSessionService.hasUsedCloud(userId);
 
     try {
-        
         await ctx.sendChatAction('upload_document');
         const fileUrl = await getFileUrl(ctx, fileId);
         const savedPath = await storage.downloadAndSave(fileUrl, fileName, category, userFolder, checkDuplicates);
 
-        const shortPath = path.basename(savedPath);
-        await ctx.reply(
-            `✅ *${getCategoryEmoji(category)} ${category}* recibido y guardado\\.\n` +
-            `📄 Archivo: \`${shortPath}\``,
-            { parse_mode: 'MarkdownV2' }
-        );
+        // El detalle completo solo queda en consola; el chat solo recibe la reacción ✅
+        console.info(`[MediaHandler] Archivo guardado con éxito (${category}): ${savedPath}`);
+        await reactToMessage(ctx, '👍');
     } catch (error) {
         const msg = error instanceof Error ? error.message : 'Error desconocido';
-        console.error(`[ERROR] MediaHandler (${category}): ${msg}`);
-        await ctx.reply('❌ No pude guardar el archivo\\. Intenta de nuevo\\.', {
-            parse_mode: 'MarkdownV2',
-        });
+        // El detalle completo solo queda en consola; el chat solo recibe la reacción 👎
+        console.error(`[ERROR] No se pudo guardar debido a un error. MediaHandler (${category}): ${msg}`);
+        await reactToMessage(ctx, '👎');
     }
-}
-
-function getCategoryEmoji(category: MediaCategory): string {
-    const emojis: Record<MediaCategory, string> = {
-        Imagenes: '🖼',
-        Video: '🎬',
-        Audio: '🎵',
-        Documentos: '📄',
-    };
-    return emojis[category];
 }
 
 export function registerMediaHandlers(bot: Telegraf<BotContext>): void {

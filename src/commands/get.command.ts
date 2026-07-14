@@ -96,6 +96,15 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
             );
 
             await deleteStatus();
+
+            // Éxito: borramos también el mensaje con el enlace (/get ...) para que
+            // en el chat solo quede el video. Si falla el borrado (ej. sin permisos
+            // en el grupo), lo ignoramos silenciosamente; no afecta el resultado.
+            try {
+                await ctx.telegram.deleteMessage(ctx.chat!.id, ctx.message.message_id);
+            } catch {
+                /* sin permisos o ya eliminado */
+            }
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
             console.error(`[ERROR] /get: ${msg}`);

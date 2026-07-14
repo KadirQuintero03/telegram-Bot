@@ -8,6 +8,18 @@ async function main(): Promise<void> {
 
   const bot = createBot();
 
+  // ── Menú de comandos: aparece como lista al escribir "/" en el chat ──
+  await bot.telegram.setMyCommands([
+    { command: 'start', description: 'Registrarte y ver bienvenida' },
+    { command: 'help', description: 'Ver la guía completa de comandos' },
+    { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
+    { command: 'traducir', description: 'Traducir un texto al español' },
+    { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
+    { command: 'cloud', description: 'Explorar tus archivos guardados' },
+    { command: 'email', description: 'Enviar archivos por correo' },
+    { command: 'borrar', description: 'Eliminar mensajes en grupos (admins)' },
+  ]);
+
   // ── Servidor HTTP para que GlowPic (frontend) explore los archivos ──
   const explorerApp = createExplorerServer();
   explorerApp.listen(EXPLORER_PORT, () => {
