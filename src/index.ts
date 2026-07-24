@@ -15,13 +15,13 @@ async function main(): Promise<void> {
     { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
     { command: 'traducir', description: 'Traducir un texto al español' },
     { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
-    { command: 'tran', description: 'Transcribir un audio (respóndelo con este comando)' },
-    { command: 'resumen', description: 'Resumir texto, audio o imagen (respondiendo)' },
+    // { command: 'tran', description: 'Transcribir un audio' },
+    // { command: 'resumen', description: 'Resumir texto, audio o imagen' },
     { command: 'ia', description: 'Preguntarle algo a la IA' },
     { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
     { command: 'cloud', description: 'Explorar tus archivos guardados' },
-    { command: 'email', description: 'Enviar archivos por correo' },
-    { command: 'borrar', description: 'Eliminar mensajes en grupos (admins)' },
+    // { command: 'email', description: 'Enviar archivos por correo' },
+    // { command: 'borrar', description: 'Eliminar mensajes en grupos (admins)' },
   ]);
 
   // ── Servidor HTTP para que GlowPic (frontend) explore los archivos ──
