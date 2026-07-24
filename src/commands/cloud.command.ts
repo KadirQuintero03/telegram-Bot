@@ -5,6 +5,8 @@ import { cloudSessionService } from '../services/cloudSession.service.js';
 import { fileBrowserService, FILE_PAGE_SIZE, CloudFileInfo } from '../services/fileBrowser.service.js';
 import { MediaCategory } from '../types/media.types.js';
 import { escapeMarkdown } from '../utils/formatters.js';
+import { commandTrigger } from '../utils/commandMatcher.js';
+import { deleteCommandMessage } from '../utils/telegramHelpers.js';
 
 const CATEGORY_LABELS: Record<MediaCategory, string> = {
     Imagenes: '🖼 Imágenes',
@@ -95,12 +97,13 @@ export async function sendFiles(ctx: BotContext, filePaths: string[]): Promise<v
 }
 
 export function registerCloudCommand(bot: Telegraf<BotContext>): void {
-    bot.command('cloud', async (ctx) => {
+    bot.hears(commandTrigger('cloud'), async (ctx) => {
         const userId = ctx.from?.id;
         const userFolder = resolveUserFolder(userId);
 
         if (!userId || !userFolder) {
             await ctx.reply('⚠️ Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
+            await deleteCommandMessage(ctx);
             return;
         }
 
@@ -111,6 +114,9 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
             '☁️ *Tus archivos en la nube*\n\n¿A cuál de tus directorios personales deseas acceder?',
             { parse_mode: 'MarkdownV2', reply_markup: buildMenuKeyboard().reply_markup }
         );
+
+        // Borramos el mensaje "/cloud" para dejar solo el menú del bot.
+        await deleteCommandMessage(ctx);
     });
 
     bot.action(/^cloud:cat:(.+)$/, async (ctx) => {

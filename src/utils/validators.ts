@@ -106,6 +106,34 @@ export function validateEmailBody(text: string | undefined): { valid: boolean; b
   return { valid: true, body: text.trim() };
 }
 
+export function validateDolarArg(
+  text: string | undefined
+): { valid: boolean; amount?: number; error?: string } {
+  const trimmed = (text ?? '').trim();
+
+  if (trimmed.length === 0) {
+    // Sin argumentos: se interpreta como "solo dame la tasa de hoy".
+    return { valid: true };
+  }
+
+  const normalized = trimmed.replace(',', '.');
+  const amount = Number(normalized);
+
+  if (Number.isNaN(amount) || !Number.isFinite(amount)) {
+    return { valid: false, error: '⚠️ Debes indicar un número válido. Ejemplo: `/dolar 20`' };
+  }
+
+  if (amount <= 0) {
+    return { valid: false, error: '⚠️ La cantidad de dólares debe ser mayor a 0.' };
+  }
+
+  if (amount > 1_000_000_000) {
+    return { valid: false, error: '⚠️ La cantidad es demasiado grande.' };
+  }
+
+  return { valid: true, amount };
+}
+
 export type SupportedPlatform = 'tiktok' | 'instagram' | 'youtube';
 
 const PLATFORM_PATTERNS: Record<SupportedPlatform, RegExp> = {

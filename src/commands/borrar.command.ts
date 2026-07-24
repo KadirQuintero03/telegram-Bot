@@ -3,9 +3,10 @@ import { BotContext } from '../types/bot.types.js';
 import { TelegramService } from '../services/telegram.service.js';
 import { validateDeleteArg } from '../utils/validators.js';
 import { config } from '../config/env.js';
+import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
 
 export function registerBorrarCommand(bot: Telegraf<BotContext>): void {
-  bot.command('borrar', async (ctx) => {
+  bot.hears(commandTrigger('borrar'), async (ctx) => {
     // Solo en grupos
     if (!TelegramService.isGroup(ctx)) {
       await ctx.reply('⚠️ El comando `/borrar` solo está disponible en grupos\\.', {
@@ -33,7 +34,7 @@ export function registerBorrarCommand(bot: Telegraf<BotContext>): void {
       return;
     }
 
-    const args = ctx.message.text.split(' ').slice(1).join(' ');
+    const args = getCommandArgs(ctx.message.text);
     const validation = validateDeleteArg(args, config.maxDeleteMessages);
 
     if (!validation.valid) {

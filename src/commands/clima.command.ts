@@ -3,16 +3,19 @@ import { BotContext } from '../types/bot.types.js';
 import { WeatherService } from '../services/weather.service.js';
 import { validateCityArg } from '../utils/validators.js';
 import { formatWeatherMessage } from '../utils/formatters.js';
+import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
+import { deleteCommandMessage } from '../utils/telegramHelpers.js';
 
 const weatherService = new WeatherService();
 
 export function registerClimaCommand(bot: Telegraf<BotContext>): void {
-  bot.command('clima', async (ctx) => {
-    const args = ctx.message.text.split(' ').slice(1).join(' ');
+  bot.hears(commandTrigger('clima'), async (ctx) => {
+    const args = getCommandArgs(ctx.message.text);
     const validation = validateCityArg(args);
 
     if (!validation.valid) {
       await ctx.reply(validation.error ?? 'Error de validación.', { parse_mode: 'Markdown' });
+      await deleteCommandMessage(ctx);
       return;
     }
 
@@ -27,6 +30,8 @@ export function registerClimaCommand(bot: Telegraf<BotContext>): void {
       await ctx.reply(`❌ No pude obtener el clima\\. ${msg.includes('ciudad') ? msg : 'Intenta de nuevo más tarde\\.'}`, {
         parse_mode: 'MarkdownV2',
       });
+    } finally {
+      await deleteCommandMessage(ctx);
     }
   });
 }

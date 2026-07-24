@@ -8,6 +8,8 @@ import { userRegistry } from '../services/userRegistry.service.js';
 import { validateDownloadUrl, SupportedPlatform } from '../utils/validators.js';
 import { parseTikTokUrlMeta } from '../utils/validators.js';
 import { escapeMarkdown } from '../utils/formatters.js';
+import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
+import { deleteCommandMessage } from '../utils/telegramHelpers.js';
 
 const tiktokService = new TikTokService();
 const instagramService = new InstagramService();
@@ -43,12 +45,13 @@ function buildFileName(platform: SupportedPlatform, url: string): string {
 }
 
 export function registerGetCommand(bot: Telegraf<BotContext>): void {
-    bot.command('get', async (ctx) => {
-        const args = ctx.message.text.split(' ').slice(1).join(' ');
+    bot.hears(commandTrigger('get'), async (ctx) => {
+        const args = getCommandArgs(ctx.message.text);
         const validation = validateDownloadUrl(args);
 
         if (!validation.valid) {
             await ctx.reply(validation.error ?? 'Error de validación.', { parse_mode: 'Markdown' });
+            await deleteCommandMessage(ctx);
             return;
         }
 
@@ -57,6 +60,7 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
 
         if (!userFolder) {
             await ctx.reply('⚠️ Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
+            await deleteCommandMessage(ctx);
             return;
         }
 
@@ -96,19 +100,14 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
             );
 
             await deleteStatus();
-
-            // Éxito: borramos también el mensaje con el enlace (/get ...) para que
-            // en el chat solo quede el video. Si falla el borrado (ej. sin permisos
-            // en el grupo), lo ignoramos silenciosamente; no afecta el resultado.
-            try {
-                await ctx.telegram.deleteMessage(ctx.chat!.id, ctx.message.message_id);
-            } catch {
-                /* sin permisos o ya eliminado */
-            }
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
             console.error(`[ERROR] /get: ${msg}`);
             await updateStatus(`❌ No pude completar la descarga\\.\n${escapeMarkdown(msg)}`);
+        } finally {
+            // Borramos el mensaje con el comando/enlace (/get ...) para que en el
+            // chat solo quede el resultado (video o mensaje de error).
+            await deleteCommandMessage(ctx);
         }
     });
 }

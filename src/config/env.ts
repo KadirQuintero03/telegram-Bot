@@ -26,4 +26,9 @@ export const config = {
   emailPort: parseInt(process.env['EMAIL_PORT'] ?? '587', 10),
   emailUser: requireEnv('EMAIL_USER'),
   emailPass: requireEnv('EMAIL_PASS'),
+  // Usada por !tran, !resumen y !ia. No se usa requireEnv() para que el
+  // resto del bot siga funcionando aunque esta variable falte; en ese caso
+  // los comandos de IA simplemente responderán con un error explicativo.
+  geminiApiKey: (process.env['GEMINI_API_KEY'] ?? '').trim(),
+  geminiModel: (process.env['GEMINI_MODEL'] ?? 'gemini-3.1-flash-lite').trim(),
 };
