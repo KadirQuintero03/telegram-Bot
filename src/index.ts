@@ -18,28 +18,27 @@ async function main(): Promise<void> {
   const bot = createBot();
 
 
-  await bot.telegram.setMyCommands([
-    { command: 'start', description: 'Registrarte y ver bienvenida' },
-    { command: 'help', description: 'Ver la guía completa de comandos' },
-    { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
-    { command: 'tra', description: 'Traducir un texto al español' },
-    { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
-    { command: 'ask', description: 'Preguntarle algo a la IA' },
-    { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
-    { command: 'cloud', description: 'Explorar tus archivos guardados' },
-    { command: 'web', description: 'Link para acceder a GlowPic' },
-    { command: 'phone', description: 'Dar acceso a tu telefono para la web'}
-  ]);
-
-
+  try {
+    await bot.telegram.setMyCommands([
+      { command: 'start', description: 'Registrarte y ver bienvenida' },
+      { command: 'help', description: 'Ver la guía completa de comandos' },
+      { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
+      { command: 'tra', description: 'Traducir un texto al español' },
+      { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
+      { command: 'ask', description: 'Preguntarle algo a la IA' },
+      { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
+      { command: 'cloud', description: 'Explorar tus archivos guardados' },
+      { command: 'web', description: 'Link para acceder a GlowPic' },
+      { command: 'phone', description: 'Dar acceso a tu telefono para la web' }
+    ]);
+  } catch (err) {
+    console.error('[WARN] No se pudieron registrar los comandos (setMyCommands):', err);
+  }
 
   const explorerApp = createExplorerServer(bot);
   const explorerHttpServer = explorerApp.listen(EXPLORER_PORT, () => {
     console.info(`[INFO] ✅ Explorer server escuchando en http://localhost:${EXPLORER_PORT}`);
   });
-
-
-
 
   explorerHttpServer.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
@@ -51,7 +50,6 @@ async function main(): Promise<void> {
     }
   });
 
-
   process.once('SIGINT', () => {
     console.info('[INFO] SIGINT recibido. Deteniendo bot...');
     bot.stop('SIGINT');
@@ -60,7 +58,6 @@ async function main(): Promise<void> {
     console.info('[INFO] SIGTERM recibido. Deteniendo bot...');
     bot.stop('SIGTERM');
   });
-
 
   await bot.launch();
 
