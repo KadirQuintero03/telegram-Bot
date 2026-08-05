@@ -24,14 +24,11 @@ async function main(): Promise<void> {
     { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
     { command: 'tra', description: 'Traducir un texto al español' },
     { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
-
-
     { command: 'ask', description: 'Preguntarle algo a la IA' },
     { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
     { command: 'cloud', description: 'Explorar tus archivos guardados' },
-    { command: 'web', description: 'Vincular tu teléfono y acceder a GlowPic' },
-
-
+    { command: 'web', description: 'Link para acceder a GlowPic' },
+    { command: 'phone', description: 'Dar acceso a tu telefono para la web'}
   ]);
 
 
