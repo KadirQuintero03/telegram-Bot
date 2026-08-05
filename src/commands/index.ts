@@ -13,6 +13,7 @@ import { registerTranCommand } from './tran.command.js';
 import { registerResumeCommand } from './resume.command.js';
 import { registerAskCommand } from './ask.command.js';
 import { registerWebCommand } from './web.command.js';
+import { registerPhoneCommand } from './phone.command.js';
 
 export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerStartCommand(bot);
@@ -27,5 +28,6 @@ export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerTranCommand(bot);
   registerResumeCommand(bot);
   registerAskCommand(bot);
+  registerPhoneCommand(bot);
   registerWebCommand(bot);
 }

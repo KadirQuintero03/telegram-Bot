@@ -3,8 +3,6 @@ import { config } from '../config/env.js';
 
 const REQUEST_TIMEOUT_MS = 60000;
 
-// Headers de respaldo: solo se usan si la respuesta del downloader es un
-// JSON que apunta a una URL directa del CDN de TikTok (esa sí los necesita).
 const FALLBACK_HEADERS = {
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
@@ -13,15 +11,6 @@ const FALLBACK_HEADERS = {
 };
 
 export class TikTokService {
-    /**
-     * Descarga el video delegando la extracción a un servicio propio
-     * (self-hosted) configurado en TIKTOK_DOWNLOADER_BASE_URL.
-     *
-     * Soporta dos formas de respuesta del endpoint, ya que no conocemos
-     * el formato exacto hasta probarlo en vivo:
-     *  - Binario directo (content-type "video/*" u "octet-stream"): se usa tal cual.
-     *  - JSON con una URL de video embebida: se busca esa URL y se descarga aparte.
-     */
     async downloadVideo(postUrl: string): Promise<Buffer> {
         const baseUrl = config.tiktokDownloaderBaseUrl;
         if (!baseUrl) {
@@ -50,7 +39,6 @@ export class TikTokService {
             return this.resolveFromJson(buffer);
         }
 
-        // Content-type ambiguo o ausente: si el tamaño parece un video, lo aceptamos igual.
         if (buffer.length > 50_000) {
             return buffer;
         }
@@ -59,8 +47,6 @@ export class TikTokService {
             `Respuesta inesperada del servicio de descarga (content-type: ${contentType || 'desconocido'}, ${buffer.length} bytes).`
         );
     }
-
-    // ── Privados ─────────────────────────────────────────────────────
 
     private async resolveFromJson(buffer: Buffer): Promise<Buffer> {
         let json: unknown;
@@ -87,9 +73,6 @@ export class TikTokService {
         return Buffer.from(response.data);
     }
 
-    // Busca recursivamente, en cualquier nivel del JSON, un string que parezca
-    // una URL de video descargable. Revisa primero las claves más comunes
-    // usadas por este tipo de servicios antes de recorrer todo el objeto.
     private findVideoUrl(value: unknown): string | null {
         if (typeof value === 'string') {
             const looksLikeVideoUrl =

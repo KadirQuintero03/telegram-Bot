@@ -46,7 +46,7 @@ export class WeatherService {
       return cached;
     }
 
-    // 1. Geocodificación
+
     const geoResponse = await axios.get<GeocodingResponse>(GEOCODING_URL, {
       params: { name: cityName, count: 1, language: 'es', format: 'json' },
       timeout: TIMEOUT_MS,
@@ -62,7 +62,7 @@ export class WeatherService {
       throw new Error(`No se encontró la ciudad: "${cityName}"`);
     }
 
-    // 2. Forecast
+
     const weatherResponse = await axios.get<WeatherResponse>(FORECAST_URL, {
       params: {
         latitude: location.latitude,

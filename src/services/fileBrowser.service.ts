@@ -12,7 +12,7 @@ export interface CloudFileInfo {
 export const FILE_PAGE_SIZE = 10;
 
 export class FileBrowserService {
-    /** Lista los archivos de una categoría, ordenados por fecha de guardado (ascendente). */
+    
     listFiles(userFolder: string, category: MediaCategory): CloudFileInfo[] {
         const dir = path.join(userFolder, CATEGORY_DIRS[category]);
         if (!fs.existsSync(dir)) return [];

@@ -71,13 +71,13 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
                 await ctx.telegram.editMessageText(ctx.chat!.id, statusMsg.message_id, undefined, text, {
                     parse_mode: 'MarkdownV2',
                 });
-            } catch { /* ya eliminado */ }
+            } catch {  }
         };
 
         const deleteStatus = async (): Promise<void> => {
             try {
                 await ctx.telegram.deleteMessage(ctx.chat!.id, statusMsg.message_id);
-            } catch { /* ya eliminado */ }
+            } catch {  }
         };
 
         try {
@@ -105,8 +105,8 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
             console.error(`[ERROR] /get: ${msg}`);
             await updateStatus(`❌ No pude completar la descarga\\.\n${escapeMarkdown(msg)}`);
         } finally {
-            // Borramos el mensaje con el comando/enlace (/get ...) para que en el
-            // chat solo quede el resultado (video o mensaje de error).
+
+
             await deleteCommandMessage(ctx);
         }
     });

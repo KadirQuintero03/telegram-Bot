@@ -115,7 +115,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
             { parse_mode: 'MarkdownV2', reply_markup: buildMenuKeyboard().reply_markup }
         );
 
-        // Borramos el mensaje "/cloud" para dejar solo el menú del bot.
+
         await deleteCommandMessage(ctx);
     });
 

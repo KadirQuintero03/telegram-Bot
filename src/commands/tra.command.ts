@@ -8,13 +8,6 @@ import { deleteCommandMessage } from '../utils/telegramHelpers.js';
 
 const translationService = new TranslationService();
 
-/**
- * Obtiene el texto a traducir:
- * 1. Si el comando responde a un mensaje del chat, se traduce ESE mensaje
- *    (su texto o su caption si es una foto/video/documento con pie de foto).
- * 2. Si no hay mensaje respondido, se usa el texto que acompaña al comando,
- *    igual que antes (ej. "/traducir Hello").
- */
 function resolveTextToTranslate(ctx: BotContext, args: string): { text?: string; error?: string } {
   const replyTo = ctx.message && 'reply_to_message' in ctx.message ? ctx.message.reply_to_message : undefined;
 

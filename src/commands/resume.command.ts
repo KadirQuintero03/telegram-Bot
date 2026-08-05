@@ -12,7 +12,6 @@ const SUMMARY_INSTRUCTION =
   'El resumen debe tener como máximo 4-5 líneas, yendo directo a las ideas principales, ' +
   'sin agregar opiniones ni información que no esté presente en el contenido original.';
 
-// Límite prudente para no exceder el tamaño razonable de una solicitud inline a Gemini.
 const MAX_MEDIA_BYTES = 18 * 1024 * 1024;
 
 type ResumenTarget =
@@ -73,7 +72,7 @@ function resolveTarget(ctx: BotContext): ResumenTarget | null {
     };
   }
 
-  // Mensaje respondido sin texto, caption o adjunto: si tiene caption, usarlo.
+
   if ('caption' in replyTo && replyTo.caption) {
     return { kind: 'text', text: replyTo.caption };
   }

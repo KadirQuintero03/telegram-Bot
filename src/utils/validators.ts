@@ -112,7 +112,6 @@ export function validateDolarArg(
   const trimmed = (text ?? '').trim();
 
   if (trimmed.length === 0) {
-    // Sin argumentos: se interpreta como "solo dame la tasa de hoy".
     return { valid: true };
   }
 

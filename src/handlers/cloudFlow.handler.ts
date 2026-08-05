@@ -15,7 +15,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
         const session = cloudSessionService.getSession(userId);
         if (!session.step) return next();
 
-        // Si el paso está activo pero falta contexto, avisamos en vez de fallar en silencio
+
         if (!session.category || !session.userFolder) {
             cloudSessionService.updateSession(userId, { step: null });
             await ctx.reply(

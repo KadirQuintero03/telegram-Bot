@@ -23,11 +23,11 @@ export function registerDolarCommand(bot: Telegraf<BotContext>): void {
       await ctx.sendChatAction('typing');
 
       if (validation.amount === undefined) {
-        // /dolar sin argumentos -> solo mostrar la tasa de hoy.
+
         const rate = await dolarService.getRate();
         await ctx.reply(formatDolarRateMessage(rate), { parse_mode: 'MarkdownV2' });
       } else {
-        // /dolar 20 -> convertir esos USD a COP.
+
         const conversion = await dolarService.convert(validation.amount);
         await ctx.reply(formatDolarConversionMessage(conversion), { parse_mode: 'MarkdownV2' });
       }

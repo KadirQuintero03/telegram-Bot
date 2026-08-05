@@ -4,7 +4,7 @@ import { config } from '../config/env.js';
 export interface GeminiInlinePart {
   inlineData: {
     mimeType: string;
-    data: string; // base64
+    data: string;
   };
 }
 
@@ -28,11 +28,6 @@ interface GeminiApiResponse {
 
 const TIMEOUT_MS = 60000;
 
-/**
- * Cliente delgado para la API de Gemini (generativelanguage.googleapis.com).
- * Se usa mediante llamadas REST directas con axios para no agregar el SDK
- * oficial como nueva dependencia del proyecto.
- */
 export class GeminiService {
   private readonly apiKey: string;
   private readonly model: string;
@@ -46,12 +41,7 @@ export class GeminiService {
     return `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent`;
   }
 
-  /**
-   * Envía uno o más "parts" (texto y/o archivos en base64) a Gemini y
-   * devuelve el texto generado. Lanza un Error con un mensaje entendible
-   * si Gemini no responde, bloquea el contenido, o la respuesta viene vacía.
-   */
-  async generateContent(parts: GeminiPart[]): Promise<string> {
+    async generateContent(parts: GeminiPart[]): Promise<string> {
     if (!this.apiKey) {
       throw new Error('La API de IA no está configurada (falta GEMINI_API_KEY).');
     }

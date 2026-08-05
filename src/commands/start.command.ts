@@ -9,7 +9,7 @@ export function registerStartCommand(bot: Telegraf<BotContext>): void {
     const telegramId = ctx.from.id;
     const firstName = ctx.from.first_name ?? 'amigo';
 
-    // Usar @username si tiene, si no usar first_name como fallback
+
     const username =
       ctx.from.username ??
       `${ctx.from.first_name}${ctx.from.last_name ? '_' + ctx.from.last_name : ''}`;
@@ -30,7 +30,8 @@ export function registerStartCommand(bot: Telegraf<BotContext>): void {
       `🎙 /tran — Transcribe audios \\(respondiendo a una nota de voz\\)\n` +
       `📝 /resume — Resume texto, audio o imágenes\n` +
       `🤖 /ask \\<pregunta\\> — Pregúntale algo a la IA\n` +
-      `🌐 /web — Vincula tu teléfono para acceder a GlowPic\n` +
+      `📱 /phone — Vincula tu teléfono\n` +
+      `🌐 /web — Obtén tu enlace de acceso a GlowPic\n` +
       `🗑 /borrar \\<N\\> — Eliminar mensajes en grupos\n` +
       `❓ /help — Ver ayuda completa\n\n` +
       `_También puedes enviarme imágenes, videos, audios y documentos para guardarlos\\._`,

@@ -10,33 +10,20 @@ interface CodeEntry {
     attempts: number;
 }
 
-// Tiempo de vida del código de acceso y máximo de intentos de verificación,
-// para mitigar ataques de fuerza bruta sobre un código de solo 4 dígitos.
-const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+const CODE_TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-/**
- * Genera y valida los códigos de acceso de 4 dígitos que le permiten a un
- * usuario de GlowPic (web) iniciar sesión usando su cuenta de Telegram como
- * segundo factor. El código se guarda en memoria (no en disco) por ser un
- * dato temporal y sensible.
- */
 export class AccessCodeService {
-    private codes = new Map<string, CodeEntry>(); // clave: teléfono normalizado
+    private codes = new Map<string, CodeEntry>();
     private bot: Telegraf<BotContext> | null = null;
 
-    // El bot se inyecta después de crearse (ver server/explorer.server.ts),
-    // ya que este servicio se instancia antes de que el bot exista.
+
+
     setBot(bot: Telegraf<BotContext>): void {
         this.bot = bot;
     }
 
-    /**
-     * Busca al usuario dueño del teléfono, genera un código de 4 dígitos
-     * 100% aleatorio y se lo envía por Telegram. Lanza un error descriptivo
-     * si el teléfono no está registrado o si el envío falla.
-     */
-    async requestCode(rawPhone: string): Promise<{ maskedPhone: string }> {
+        async requestCode(rawPhone: string): Promise<{ maskedPhone: string }> {
         if (!this.bot) {
             throw new Error('El servicio de autenticación no está disponible en este momento.');
         }
@@ -74,13 +61,7 @@ export class AccessCodeService {
         return { maskedPhone: this.maskPhone(phoneKey) };
     }
 
-    /**
-     * Verifica el código ingresado en GlowPic. Devuelve el nombre de la
-     * carpeta del usuario (usado luego para restringir qué puede ver en el
-     * explorador de archivos). El código es de un solo uso: se elimina tras
-     * un intento exitoso, y también tras agotar los intentos permitidos.
-     */
-    verifyCode(rawPhone: string, code: string): { folderName: string } {
+        verifyCode(rawPhone: string, code: string): { folderName: string } {
         const phoneKey = userRegistry.normalizePhone(rawPhone);
         const entry = this.codes.get(phoneKey);
 
@@ -108,7 +89,7 @@ export class AccessCodeService {
     }
 
     private generateCode(): string {
-        // Aleatorio uniforme entre 0000 y 9999, siempre con 4 dígitos.
+
         const value = Math.floor(Math.random() * 10000);
         return value.toString().padStart(4, '0');
     }

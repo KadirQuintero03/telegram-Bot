@@ -2,7 +2,7 @@ import { BotContext } from '../types/bot.types.js';
 import { TelegramService } from '../services/telegram.service.js';
 
 export async function adminCheckMiddleware(ctx: BotContext, next: () => Promise<void>): Promise<void> {
-  // Solo aplica en grupos
+
   if (!TelegramService.isGroup(ctx)) {
     await ctx.reply('⚠️ Este comando solo está disponible en grupos.');
     return;

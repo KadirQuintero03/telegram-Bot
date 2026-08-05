@@ -7,9 +7,9 @@ import { MediaCategory, CATEGORY_DIRS } from '../types/media.types.js';
 
 export class FileStorageService {
 
-    // Descarga un archivo desde una URL y lo guarda en la carpeta del usuario.
-    // checkDuplicates: si es true, verifica por hash si el contenido ya existe
-    // en la categoría y, de ser así, no guarda una copia nueva.
+    
+    
+    
     async downloadAndSave(
         fileUrl: string,
         fileName: string,
@@ -38,7 +38,7 @@ export class FileStorageService {
         return finalPath;
     }
 
-    // Guarda un Buffer ya descargado en memoria (ej: video de TikTok) en la carpeta del usuario
+    
     async saveBuffer(
         buffer: Buffer,
         fileName: string,
@@ -65,7 +65,7 @@ export class FileStorageService {
         return finalPath;
     }
 
-    // Evita sobreescribir archivos con el mismo nombre
+    
     private resolveUniqueFilePath(dir: string, fileName: string): string {
         const ext = path.extname(fileName);
         const base = path.basename(fileName, ext);
@@ -80,17 +80,17 @@ export class FileStorageService {
         return candidate;
     }
 
-    // Limpia caracteres inválidos del nombre del archivo
+    
     private sanitizeFileName(name: string): string {
         return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim() || 'archivo';
     }
 
-    // Calcula el hash SHA-256 del contenido de un archivo
+    
     private hashBuffer(buffer: Buffer): string {
         return crypto.createHash('sha256').update(buffer).digest('hex');
     }
 
-    // Busca, dentro de una carpeta, un archivo cuyo contenido coincida por hash
+    
     private findDuplicateByHash(dir: string, buffer: Buffer, excludePath?: string): string | null {
         if (!fs.existsSync(dir)) return null;
         const targetHash = this.hashBuffer(buffer);
@@ -111,7 +111,7 @@ export class FileStorageService {
         return null;
     }
 
-    // Descarga el archivo desde una URL usando http/https nativo
+    
     private downloadFile(url: string, destPath: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const file = fs.createWriteStream(destPath);

@@ -4,8 +4,7 @@ import { config } from './config/env.js';
 import { loggerMiddleware } from './middlewares/logger.middleware.js';
 import { registerAllCommands } from './commands/index.js';
 import { registerMediaHandlers } from './handlers/media.handler.js';
-import { registerEmailFlowHandler } from './handlers/emailFlow.handler.js';  // 👈 NUEVO
-
+import { registerEmailFlowHandler } from './handlers/emailFlow.handler.js';
 
 export function createBot(): Telegraf<BotContext> {
   const bot = new Telegraf<BotContext>(config.botToken);

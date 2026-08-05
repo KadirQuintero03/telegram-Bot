@@ -41,8 +41,10 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `Permite ver cuántos archivos tienes, su peso total, y recibirlos de nuevo en el chat\\.\n\n` +
       `📧 */email*\n` +
       `Inicia el flujo para enviar un archivo por correo\\.\n\n` +
+      `📱 */phone*\n` +
+      `Vincula tu número de teléfono con tu cuenta de Telegram\\.\n\n` +
       `🌐 */web*\n` +
-      `Vincula tu número de teléfono para poder iniciar sesión en GlowPic \\(la primera vez te lo pedirá; luego te dará el enlace directo\\)\\.\n` +
+      `Envía el enlace para iniciar sesión en GlowPic \\(requiere haber vinculado tu teléfono con /phone\\)\\.\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `_Rango de borrado: 1 a 100 mensajes_`;
 

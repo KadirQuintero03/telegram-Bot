@@ -7,21 +7,16 @@ import { config } from '../config/env.js';
 import { BotContext } from '../types/bot.types.js';
 import { accessCodeService } from '../services/accessCode.service.js';
 
-// Raíz absoluta donde el bot guarda todo (ya definida en config/env.ts)
 const BASE_STORAGE_PATH = path.resolve(config.filesStoragePath);
 
 interface ExplorerEntry {
     name: string;
     type: 'directory' | 'file';
-    path: string; // relativo a la carpeta del usuario ("owner"), con separadores '/'
+    path: string;
     size?: number;
     modifiedAt?: number;
 }
 
-// Convierte un path relativo (enviado por el frontend) dentro de la carpeta
-// de un usuario ("owner") en un path absoluto real, evitando:
-// 1) path traversal fuera de la carpeta del owner (ej. "../otro_usuario")
-// 2) acceso a la carpeta de otro usuario (GlowPic, requisito #3)
 function resolveSafePath(owner: string, relativePath: string): string {
     if (!owner || /[/\\]/.test(owner)) {
         throw new Error('Usuario (owner) inválido.');
@@ -53,10 +48,6 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
     app.use(cors({ origin: '*' }));
     app.use(express.json());
 
-    // ── Autenticación GlowPic ↔ Telegram ────────────────────────────
-
-    // Paso 1: el usuario ingresa su teléfono en GlowPic. Si está vinculado
-    // a una cuenta de Telegram (a través de /web), se le envía un código.
     app.post('/auth/request-code', async (req: Request, res: Response) => {
         const phone = (req.body?.phone as string) ?? '';
 
@@ -74,7 +65,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
         }
     });
 
-    // Paso 2: el usuario ingresa el código de 4 dígitos recibido por Telegram.
+
     app.post('/auth/verify-code', (req: Request, res: Response) => {
         const phone = (req.body?.phone as string) ?? '';
         const code = (req.body?.code as string) ?? '';
@@ -85,9 +76,6 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
 
         try {
             const result = accessCodeService.verifyCode(phone, code);
-            // "owner" es lo único que el frontend necesita recordar para que,
-            // de ahora en adelante, el explorer server le muestre ÚNICAMENTE
-            // la carpeta que le corresponde.
             res.json({ success: true, owner: result.folderName });
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
@@ -96,7 +84,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
         }
     });
 
-    // ── Explorador de archivos (restringido a la carpeta del owner) ────
+
 
     app.get('/explorer', (req: Request, res: Response) => {
         const owner = (req.query.owner as string) ?? '';
@@ -141,7 +129,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
                 };
             });
 
-            // Carpetas primero, luego archivos, orden alfabético
+
             entries.sort((a, b) => {
                 if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
                 return a.name.localeCompare(b.name);
@@ -158,7 +146,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>) {
         }
     });
 
-    // ── Servir el contenido real de un archivo ────────────────────
+
     app.get('/explorer/file', (req: Request, res: Response) => {
         const owner = (req.query.owner as string) ?? '';
         const relativePath = (req.query.path as string) ?? '';

@@ -4,10 +4,7 @@ export class CloudSessionService {
     private sessions = new Map<number, CloudSessionData>();
     private cloudUsers = new Set<number>();
 
-    /**
-     * Marca que el usuario ha usado /cloud. La verificación de duplicados
-     * al subir archivos solo se activa para usuarios que han usado este comando.
-     */
+    
     markCloudUsed(userId: number): void {
         this.cloudUsers.add(userId);
     }
