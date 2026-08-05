@@ -53,7 +53,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
         '📱 Para continuar necesito tu número de teléfono\\. Este se usará para vincular tu cuenta de Telegram con tu galería en GlowPic\\.\n\n' +
           'Puedes dármelo de dos formas:\n' +
           '1️⃣ Pulsando el botón *"📲 Compartir mi número de teléfono"* de abajo, si tu aplicación lo permite\\.\n' +
-          '2️⃣ *Escribiendo tú mismo tu número* en el campo de texto de este chat y enviándolo como un mensaje normal \\(ej\\. \\`+57 300 1234567\\`\\)\\.\n\n' +
+          '2️⃣ *Escribiendo tú mismo tu número* en el campo de texto de este chat y enviándolo como un mensaje normal \\(ej\\. `3193584046`\\)\\.\n\n' +
           'También puedes escribir /cancelar si no deseas continuar\\.',
         {
           parse_mode: 'MarkdownV2',
