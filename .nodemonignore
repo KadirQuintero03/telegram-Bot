@@ -1,0 +1,6 @@
+data/
+data/**
+filesBotTelegram/
+filesBotTelegram/**
+dist/
+dist/**

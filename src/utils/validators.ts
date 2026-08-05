@@ -16,7 +16,7 @@ export function validateTranslateArg(text: string | undefined): { valid: boolean
   if (!text || text.trim().length === 0) {
     return {
       valid: false,
-      error: '⚠️ Debes proporcionar un texto. Ejemplo: `/traducir Hello world`',
+      error: '⚠️ Debes proporcionar un texto. Ejemplo: `/tra Hello world`',
     };
   }
   if (text.trim().length > 500) {

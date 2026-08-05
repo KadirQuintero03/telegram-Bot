@@ -25,11 +25,12 @@ export function registerStartCommand(bot: Telegraf<BotContext>): void {
       intro + '\n\n' +
       `Estos son mis comandos disponibles:\n\n` +
       `🌤 /clima \\<ciudad\\> — Clima en tiempo real\n` +
-      `🌐 /traducir \\<texto\\> — Traducción al español \\(también respondiendo mensajes\\)\n` +
+      `🌐 /tra \\<texto\\> — Traducción al español \\(también respondiendo mensajes\\)\n` +
       `💵 /dolar \\[cantidad\\] — Precio o conversión del dólar a COP\n` +
       `🎙 /tran — Transcribe audios \\(respondiendo a una nota de voz\\)\n` +
-      `📝 /resumen — Resume texto, audio o imágenes\n` +
-      `🤖 /ia \\<pregunta\\> — Pregúntale algo a la IA\n` +
+      `📝 /resume — Resume texto, audio o imágenes\n` +
+      `🤖 /ask \\<pregunta\\> — Pregúntale algo a la IA\n` +
+      `🌐 /web — Vincula tu teléfono para acceder a GlowPic\n` +
       `🗑 /borrar \\<N\\> — Eliminar mensajes en grupos\n` +
       `❓ /help — Ver ayuda completa\n\n` +
       `_También puedes enviarme imágenes, videos, audios y documentos para guardarlos\\._`,

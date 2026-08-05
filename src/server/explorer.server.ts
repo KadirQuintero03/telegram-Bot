@@ -2,7 +2,10 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import { Telegraf } from 'telegraf';
 import { config } from '../config/env.js';
+import { BotContext } from '../types/bot.types.js';
+import { accessCodeService } from '../services/accessCode.service.js';
 
 // Raíz absoluta donde el bot guarda todo (ya definida en config/env.ts)
 const BASE_STORAGE_PATH = path.resolve(config.filesStoragePath);
@@ -10,38 +13,102 @@ const BASE_STORAGE_PATH = path.resolve(config.filesStoragePath);
 interface ExplorerEntry {
     name: string;
     type: 'directory' | 'file';
-    path: string; // relativo a BASE_STORAGE_PATH, con separadores '/'
+    path: string; // relativo a la carpeta del usuario ("owner"), con separadores '/'
     size?: number;
     modifiedAt?: number;
 }
 
-// Convierte un path relativo (enviado por el frontend) en un path absoluto real,
-// y evita que se salga de BASE_STORAGE_PATH (path traversal).
-function resolveSafePath(relativePath: string): string {
-    const cleaned = (relativePath ?? '').replace(/^[/\\]+/, '');
-    const candidate = path.resolve(BASE_STORAGE_PATH, cleaned);
+// Convierte un path relativo (enviado por el frontend) dentro de la carpeta
+// de un usuario ("owner") en un path absoluto real, evitando:
+// 1) path traversal fuera de la carpeta del owner (ej. "../otro_usuario")
+// 2) acceso a la carpeta de otro usuario (GlowPic, requisito #3)
+function resolveSafePath(owner: string, relativePath: string): string {
+    if (!owner || /[/\\]/.test(owner)) {
+        throw new Error('Usuario (owner) inválido.');
+    }
 
-    if (!candidate.startsWith(BASE_STORAGE_PATH)) {
-        throw new Error('Ruta inválida');
+    const ownerRoot = path.resolve(BASE_STORAGE_PATH, owner);
+    if (!ownerRoot.startsWith(BASE_STORAGE_PATH) || !fs.existsSync(ownerRoot)) {
+        throw new Error('El usuario no tiene una carpeta asociada.');
+    }
+
+    const cleaned = (relativePath ?? '').replace(/^[/\\]+/, '');
+    const candidate = path.resolve(ownerRoot, cleaned);
+
+    if (!candidate.startsWith(ownerRoot)) {
+        throw new Error('Ruta inválida.');
     }
     return candidate;
 }
 
-function toRelative(absolutePath: string): string {
-    return path.relative(BASE_STORAGE_PATH, absolutePath).split(path.sep).join('/');
+function toRelative(ownerRoot: string, absolutePath: string): string {
+    return path.relative(ownerRoot, absolutePath).split(path.sep).join('/');
 }
 
-export function createExplorerServer() {
+export function createExplorerServer(bot: Telegraf<BotContext>) {
+    accessCodeService.setBot(bot);
+
     const app = express();
 
     app.use(cors({ origin: '*' }));
+    app.use(express.json());
 
-    // ── Listar contenido de un directorio ─────────────────────────
-    app.get('/explorer', (req: Request, res: Response) => {
-        const relativePath = (req.query.path as string) ?? '';
+    // ── Autenticación GlowPic ↔ Telegram ────────────────────────────
+
+    // Paso 1: el usuario ingresa su teléfono en GlowPic. Si está vinculado
+    // a una cuenta de Telegram (a través de /web), se le envía un código.
+    app.post('/auth/request-code', async (req: Request, res: Response) => {
+        const phone = (req.body?.phone as string) ?? '';
+
+        if (!phone.trim()) {
+            return res.status(400).json({ error: 'Debes indicar un número de teléfono.' });
+        }
 
         try {
-            const target = resolveSafePath(relativePath);
+            const result = await accessCodeService.requestCode(phone);
+            res.json({ success: true, sentTo: result.maskedPhone });
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : 'Error desconocido';
+            console.error(`[AuthServer] /auth/request-code: ${msg}`);
+            res.status(400).json({ error: msg });
+        }
+    });
+
+    // Paso 2: el usuario ingresa el código de 4 dígitos recibido por Telegram.
+    app.post('/auth/verify-code', (req: Request, res: Response) => {
+        const phone = (req.body?.phone as string) ?? '';
+        const code = (req.body?.code as string) ?? '';
+
+        if (!phone.trim() || !code.trim()) {
+            return res.status(400).json({ error: 'Debes indicar el teléfono y el código.' });
+        }
+
+        try {
+            const result = accessCodeService.verifyCode(phone, code);
+            // "owner" es lo único que el frontend necesita recordar para que,
+            // de ahora en adelante, el explorer server le muestre ÚNICAMENTE
+            // la carpeta que le corresponde.
+            res.json({ success: true, owner: result.folderName });
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : 'Error desconocido';
+            console.error(`[AuthServer] /auth/verify-code: ${msg}`);
+            res.status(400).json({ error: msg });
+        }
+    });
+
+    // ── Explorador de archivos (restringido a la carpeta del owner) ────
+
+    app.get('/explorer', (req: Request, res: Response) => {
+        const owner = (req.query.owner as string) ?? '';
+        const relativePath = (req.query.path as string) ?? '';
+
+        if (!owner) {
+            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.' });
+        }
+
+        try {
+            const ownerRoot = path.resolve(BASE_STORAGE_PATH, owner);
+            const target = resolveSafePath(owner, relativePath);
 
             if (!fs.existsSync(target)) {
                 return res.status(404).json({ error: 'Directorio no encontrado' });
@@ -54,7 +121,7 @@ export function createExplorerServer() {
 
             const entries: ExplorerEntry[] = dirEntries.map((dirent) => {
                 const entryAbsolutePath = path.join(target, dirent.name);
-                const entryRelativePath = toRelative(entryAbsolutePath);
+                const entryRelativePath = toRelative(ownerRoot, entryAbsolutePath);
 
                 if (dirent.isDirectory()) {
                     return {
@@ -85,17 +152,23 @@ export function createExplorerServer() {
                 entries,
             });
         } catch (error) {
-            console.error('[ExplorerServer] Error al listar directorio:', error);
-            res.status(400).json({ error: 'Ruta inválida' });
+            const msg = error instanceof Error ? error.message : 'Ruta inválida';
+            console.error('[ExplorerServer] Error al listar directorio:', msg);
+            res.status(400).json({ error: msg });
         }
     });
 
     // ── Servir el contenido real de un archivo ────────────────────
     app.get('/explorer/file', (req: Request, res: Response) => {
+        const owner = (req.query.owner as string) ?? '';
         const relativePath = (req.query.path as string) ?? '';
 
+        if (!owner) {
+            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.' });
+        }
+
         try {
-            const target = resolveSafePath(relativePath);
+            const target = resolveSafePath(owner, relativePath);
 
             if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
                 return res.status(404).json({ error: 'Archivo no encontrado' });
@@ -103,8 +176,9 @@ export function createExplorerServer() {
 
             res.sendFile(target);
         } catch (error) {
-            console.error('[ExplorerServer] Error al servir archivo:', error);
-            res.status(400).json({ error: 'Ruta inválida' });
+            const msg = error instanceof Error ? error.message : 'Ruta inválida';
+            console.error('[ExplorerServer] Error al servir archivo:', msg);
+            res.status(400).json({ error: msg });
         }
     });
 
