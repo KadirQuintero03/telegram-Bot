@@ -26,7 +26,6 @@ export const config = {
   
   
   registryStoragePath: path.resolve(process.env['REGISTRY_STORAGE_PATH'] ?? './data'),
-  tiktokDownloaderBaseUrl: (process.env['TIKTOK_DOWNLOADER_BASE_URL'] ?? '').trim(),
   instagramDownloaderBaseUrl: (process.env['INSTAGRAM_DOWNLOADER_URL'] ?? '').trim(),
   youtubeDownloaderBaseUrl: (process.env['YOUTUBE_DOWNLOADER_URL'] ?? '').trim(),
   emailHost: requireEnv('EMAIL_HOST'),
