@@ -5,7 +5,7 @@ const REQUEST_TIMEOUT_MS = 120_000;
 
 export class YouTubeService {
     async downloadVideo(postUrl: string): Promise<Buffer> {
-        const baseUrl = config.tiktokDownloaderBaseUrl;
+        const baseUrl = config.youtubeDownloaderBaseUrl;
         if (!baseUrl) {
             throw new Error('Falta configurar YOUTUBE_DOWNLOADER_BASE_URL en el .env.');
         }

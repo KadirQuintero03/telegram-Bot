@@ -1,6 +1,8 @@
 node_modules/
 dist/
-.env
+botmkdir.env
 *.log
 .DS_Store
 data/registry.json
+.env
+example.env
