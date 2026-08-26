@@ -17,24 +17,13 @@ export const config = {
   logLevel: process.env['LOG_LEVEL'] ?? 'info',
   maxDeleteMessages: parseInt(process.env['MAX_DELETE_MESSAGES'] ?? '100', 10),
   weatherCacheTtlMinutes: parseInt(process.env['WEATHER_CACHE_TTL_MINUTES'] ?? '10', 10),
-  
   filesStoragePath: path.resolve(process.env['FILES_STORAGE_PATH'] ?? './filesBotTelegram'),
-  
-  
-  
-  
-  
-  
   registryStoragePath: path.resolve(process.env['REGISTRY_STORAGE_PATH'] ?? './data'),
-  instagramDownloaderBaseUrl: (process.env['INSTAGRAM_DOWNLOADER_URL'] ?? '').trim(),
-  youtubeDownloaderBaseUrl: (process.env['YOUTUBE_DOWNLOADER_URL'] ?? '').trim(),
+  downloaderApiUrl: (process.env['DOWNLOADER_API'] ?? '').trim(),
   emailHost: requireEnv('EMAIL_HOST'),
   emailPort: parseInt(process.env['EMAIL_PORT'] ?? '587', 10),
   emailUser: requireEnv('EMAIL_USER'),
   emailPass: requireEnv('EMAIL_PASS'),
-  
-  
-  
   geminiApiKey: (process.env['GEMINI_API_KEY'] ?? '').trim(),
   geminiModel: (process.env['GEMINI_MODEL'] ?? 'gemini-3.1-flash-lite').trim(),
 };
