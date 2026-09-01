@@ -25,27 +25,27 @@ export function registerEmailFlowHandler(bot: Telegraf<BotContext>): void {
             case 'awaiting_destino': {
                 const validation = validateEmailAddress(text.trim());
                 if (!validation.valid) {
-                    await ctx.reply(validation.error ?? '⚠️ Correo inválido\\.', { parse_mode: 'MarkdownV2' });
+                    await ctx.reply(validation.error ?? 'Correo inválido\\.', { parse_mode: 'MarkdownV2' });
                     return;
                 }
                 emailSessionService.updateSession(userId, { destino: validation.email, step: 'awaiting_asunto' });
-                await ctx.reply('✅ Destino guardado\\.\n\n✏️ Ahora escribe el *asunto* del correo:', { parse_mode: 'MarkdownV2' });
+                await ctx.reply('Destino guardado\\.\n\n Ahora escribe el *asunto* del correo:', { parse_mode: 'MarkdownV2' });
                 return;
             }
             case 'awaiting_asunto': {
                 const validation = validateEmailSubject(text.trim());
                 if (!validation.valid) {
-                    await ctx.reply(validation.error ?? '⚠️ Asunto inválido\\.', { parse_mode: 'MarkdownV2' });
+                    await ctx.reply(validation.error ?? 'Asunto inválido\\.', { parse_mode: 'MarkdownV2' });
                     return;
                 }
                 emailSessionService.updateSession(userId, { asunto: validation.subject, step: 'awaiting_cuerpo' });
-                await ctx.reply('✅ Asunto guardado\\.\n\n📝 Ahora escribe el *cuerpo* del correo:', { parse_mode: 'MarkdownV2' });
+                await ctx.reply('Asunto guardado\\.\n\n Ahora escribe el *cuerpo* del correo:', { parse_mode: 'MarkdownV2' });
                 return;
             }
             case 'awaiting_cuerpo': {
                 const validation = validateEmailBody(text.trim());
                 if (!validation.valid) {
-                    await ctx.reply(validation.error ?? '⚠️ Cuerpo inválido\\.', { parse_mode: 'MarkdownV2' });
+                    await ctx.reply(validation.error ?? 'Cuerpo inválido\\.', { parse_mode: 'MarkdownV2' });
                     return;
                 }
 
@@ -53,24 +53,24 @@ export function registerEmailFlowHandler(bot: Telegraf<BotContext>): void {
                 emailSessionService.endSession(userId);
 
                 if (!finalSession?.destino || !finalSession?.asunto || !validation.body) {
-                    await ctx.reply('❌ Ocurrió un error con los datos del correo\\. Intenta de nuevo con /email\\.', { parse_mode: 'MarkdownV2' });
+                    await ctx.reply('Ocurrió un error con los datos del correo\\. Intenta de nuevo con /email\\.', { parse_mode: 'MarkdownV2' });
                     return;
                 }
 
-                await ctx.reply('📤 Enviando correo\\.\\.\\.', { parse_mode: 'MarkdownV2' });
+                await ctx.reply('Enviando correo\\.\\.\\.', { parse_mode: 'MarkdownV2' });
 
                 try {
                     await emailService.sendEmail(finalSession.destino, finalSession.asunto, validation.body);
                     await ctx.reply(
-                        `✅ *Correo enviado correctamente*\n` +
-                        `📧 Destino: \`${escapeMarkdown(finalSession.destino)}\`\n` +
-                        `📋 Asunto: \`${escapeMarkdown(finalSession.asunto)}\``,
+                        `*Correo enviado correctamente*\n` +
+                        `Destino: \`${escapeMarkdown(finalSession.destino)}\`\n` +
+                        `Asunto: \`${escapeMarkdown(finalSession.asunto)}\``,
                         { parse_mode: 'MarkdownV2' }
                     );
                 } catch (error) {
                     const msg = error instanceof Error ? error.message : 'Error desconocido';
                     console.error(`[ERROR] EmailFlow: ${msg}`);
-                    await ctx.reply('❌ No pude enviar el correo\\. Intenta de nuevo más tarde\\.', { parse_mode: 'MarkdownV2' });
+                    await ctx.reply('No pude enviar el correo\\. Intenta de nuevo más tarde\\.', { parse_mode: 'MarkdownV2' });
                 }
                 return;
             }

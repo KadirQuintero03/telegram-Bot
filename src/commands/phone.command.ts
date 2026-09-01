@@ -40,7 +40,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
       if (userRegistry.hasPhone(telegramId)) {
         pendingPhoneRequests.delete(telegramId);
         const phone = userRegistry.getPhone(telegramId);
-        await ctx.reply(`📱 Ya tienes un número vinculado: ${escapeMarkdown(phone ?? '')}\\.`, {
+        await ctx.reply(`Ya tienes un número vinculado: ${escapeMarkdown(phone ?? '')}\\.`, {
           parse_mode: 'MarkdownV2',
         });
         await deleteCommandMessage(ctx);
@@ -50,15 +50,15 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
       pendingPhoneRequests.set(telegramId, Date.now() + PENDING_PHONE_TTL_MS);
 
       await ctx.reply(
-        '📱 Para continuar necesito tu número de teléfono\\. Este se usará para vincular tu cuenta de Telegram con tu galería en GlowPic\\.\n\n' +
+        'Para continuar necesito tu número de teléfono\\. Este se usará para vincular tu cuenta de Telegram con tu galería en GlowPic\\.\n\n' +
           'Puedes dármelo de dos formas:\n' +
-          '1️⃣ Pulsando el botón *"📲 Compartir mi número de teléfono"* de abajo, si tu aplicación lo permite\\.\n' +
-          '2️⃣ *Escribiendo tú mismo tu número* en el campo de texto de este chat y enviándolo como un mensaje normal \\(ej\\. `3193584046`\\)\\.\n\n' +
+          '1⃣ Pulsando el botón *"Compartir mi número de teléfono"* de abajo, si tu aplicación lo permite\\.\n' +
+          '2⃣ *Escribiendo tú mismo tu número* en el campo de texto de este chat y enviándolo como un mensaje normal \\(ej\\. `3193584046`\\)\\.\n\n' +
           'También puedes escribir /cancelar si no deseas continuar\\.',
         {
           parse_mode: 'MarkdownV2',
           reply_markup: Markup.keyboard([
-            Markup.button.contactRequest('📲 Compartir mi número de teléfono'),
+            Markup.button.contactRequest('Compartir mi número de teléfono'),
           ])
             .oneTime()
             .resize().reply_markup,
@@ -67,7 +67,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /phone: ${msg}`);
-      await ctx.reply(`❌ Ocurrió un problema al procesar /phone\\.\n${escapeMarkdown(msg)}`, {
+      await ctx.reply(`Ocurrió un problema al procesar /phone\\.\n${escapeMarkdown(msg)}`, {
         parse_mode: 'MarkdownV2',
       });
     } finally {
@@ -92,7 +92,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
       pendingPhoneRequests.delete(telegramId);
 
       await ctx.reply(
-        '✅ ¡Listo! Tu número quedó vinculado a tu cuenta\\.\n\n' +
+        '¡Listo! Tu número quedó vinculado a tu cuenta\\.\n\n' +
           'Ahora puedes usar ese mismo número para iniciar sesión en GlowPic\\. Usa /web para obtener tu enlace\\.',
         { parse_mode: 'MarkdownV2', reply_markup: { remove_keyboard: true } }
       );
@@ -101,7 +101,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
       console.error(`[ERROR] Guardando teléfono (/phone): ${msg}`);
       pendingPhoneRequests.set(telegramId, Date.now() + PENDING_PHONE_TTL_MS);
       await ctx.reply(
-        `❌ No pude guardar tu número de teléfono\\. ${escapeMarkdown(msg)}\n\nPuedes intentarlo de nuevo escribiendo tu número o pulsando el botón\\.`,
+        `No pude guardar tu número de teléfono\\. ${escapeMarkdown(msg)}\n\nPuedes intentarlo de nuevo escribiendo tu número o pulsando el botón\\.`,
         { parse_mode: 'MarkdownV2' }
       );
     }
@@ -115,7 +115,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
 
     if (contact.user_id && contact.user_id !== telegramId) {
       await ctx.reply(
-        '⚠️ Debes compartir *tu propio* número de teléfono, no el de otra persona\\.',
+        'Debes compartir *tu propio* número de teléfono, no el de otra persona\\.',
         { parse_mode: 'MarkdownV2', reply_markup: { remove_keyboard: true } }
       );
       return;
@@ -145,7 +145,7 @@ export function registerPhoneCommand(bot: Telegraf<BotContext>): void {
 
     if (!PHONE_INPUT_REGEX.test(text) || digitsOnly(text).length < 7) {
       await ctx.reply(
-        '⚠️ Ese no parece un número de teléfono válido\\. Escribe solo dígitos, con o sin \\+código de país \\(ej\\. \\`+57 300 1234567\\`\\), o usa el botón para compartir tu contacto\\.',
+        'Ese no parece un número de teléfono válido\\. Escribe solo dígitos, con o sin \\+código de país \\(ej\\. \\`+57 300 1234567\\`\\), o usa el botón para compartir tu contacto\\.',
         { parse_mode: 'MarkdownV2' }
       );
       return;

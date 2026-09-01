@@ -27,13 +27,11 @@ async function main(): Promise<void> {
       { command: 'ask', description: 'Preguntarle algo a la IA' },
       { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
-      { command: 'web', description: 'Link para acceder a GlowPic' },
-      { command: 'phone', description: 'Dar acceso a tu telefono para la web' },
+      { command: 'phone', description: 'Vincular tu teléfono' },
       { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
       { command: 'gasto', description: 'Registrar un gasto' },
       { command: 'gastos_resumen', description: 'Ver resumen de gastos de los últimos 7 días' },
-      { command: 'estado', description: 'Ver métricas del sistema' },
-      { command: 'ejecutar', description: 'Ejecutar comando de terminal (solo admin)' }
+      { command: 'estado', description: 'Ver métricas del sistema' }
     ]);
   } catch (err) {
     console.error('[WARN] No se pudieron registrar los comandos (setMyCommands):', err);
@@ -41,7 +39,7 @@ async function main(): Promise<void> {
 
   const explorerApp = createExplorerServer(bot);
   const explorerHttpServer = explorerApp.listen(EXPLORER_PORT, () => {
-    console.info(`[INFO] ✅ Explorer server escuchando en http://localhost:${EXPLORER_PORT}`);
+    console.info(`[INFO]  Explorer server escuchando en http://localhost:${EXPLORER_PORT}`);
   });
 
   explorerHttpServer.on('error', (err: NodeJS.ErrnoException) => {
@@ -66,7 +64,7 @@ async function main(): Promise<void> {
   await bot.launch({ dropPendingUpdates: true });
 
   const botInfo = await bot.telegram.getMe();
-  console.info(`[INFO] ✅ Bot iniciado correctamente: @${botInfo.username} (ID: ${botInfo.id})`);
+  console.info(`[INFO]  Bot iniciado correctamente: @${botInfo.username} (ID: ${botInfo.id})`);
 }
 
 main().catch((err) => {

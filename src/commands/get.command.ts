@@ -16,13 +16,13 @@ const instagramService = new InstagramService();
 const youtubeService = new YouTubeService();
 const storage = new FileStorageService();
 
-const DOWNLOADING_TEXT = '⏳ Descargando video\\.\\.\\.';
-const SENDING_TEXT = '📤 Enviando video\\.\\.\\.';
+const DOWNLOADING_TEXT = 'Descargando video\\.\\.\\.';
+const SENDING_TEXT = 'Enviando video\\.\\.\\.';
 
 const PLATFORM_LABELS: Record<SupportedPlatform, string> = {
-    tiktok: '🎬 *Video de TikTok descargado*',
-    instagram: '📸 *Video de Instagram descargado*',
-    youtube: '▶️ *Short de YouTube descargado*',
+    tiktok: '*Video de TikTok descargado*',
+    instagram: '*Video de Instagram descargado*',
+    youtube: '*Short de YouTube descargado*',
 };
 
 async function downloadByPlatform(
@@ -59,7 +59,7 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
         const userFolder = userId ? userRegistry.getFolderByTelegramId(userId) : null;
 
         if (!userFolder) {
-            await ctx.reply('⚠️ Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
+            await ctx.reply('Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
             await deleteCommandMessage(ctx);
             return;
         }
@@ -103,7 +103,7 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
             console.error(`[ERROR] /get: ${msg}`);
-            await updateStatus(`❌ No pude completar la descarga\\.\n${escapeMarkdown(msg)}`);
+            await updateStatus(`No pude completar la descarga\\.\n${escapeMarkdown(msg)}`);
         } finally {
 
 

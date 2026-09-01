@@ -10,8 +10,8 @@ import { escapeMarkdown } from '../utils/formatters.js';
 const geminiService = new GeminiService();
 
 const CATEGORY_PROMPT =
-  'Clasifica el siguiente gasto en UNA sola categoría de esta lista: ' +
-  'Comida, Transporte, Servicios, Ocio, Salud, Educación, Otros. ' +
+  'Clasifica el siguiente gasto en UNA sola categoría de esta lista: '+
+  'Comida, Transporte, Servicios, Ocio, Salud, Educación, Otros. '+
   'Responde ÚNICAMENTE con el nombre de la categoría, sin puntos ni texto extra.';
 
 export function registerGastoCommand(bot: Telegraf<BotContext>): void {
@@ -20,7 +20,7 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
     const chatId = ctx.chat?.id;
 
     if (!args) {
-      await ctx.reply('⚠️ Debes indicar cantidad y descripción. Ejemplo: `/gasto 15000 almuerzo`', {
+      await ctx.reply('Debes indicar cantidad y descripción. Ejemplo: `/gasto 15000 almuerzo`', {
         parse_mode: 'Markdown',
       });
       await deleteCommandMessage(ctx);
@@ -29,7 +29,7 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
 
     const { monto, descripcion } = parseGasto(args);
     if (monto === null || !descripcion) {
-      await ctx.reply('⚠️ Formato inválido. Ejemplo: `/gasto 15000 almuerzo`', {
+      await ctx.reply('Formato inválido. Ejemplo: `/gasto 15000 almuerzo`', {
         parse_mode: 'Markdown',
       });
       await deleteCommandMessage(ctx);
@@ -54,15 +54,15 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
       const formattedMonto = monto.toLocaleString('es-CO');
       await safeReply(
         ctx,
-        `✅ *Gasto registrado*\n` +
-        `💰 Monto: *${escapeMarkdown(formattedMonto)}*\n` +
-        `📝 Descripción: ${escapeMarkdown(descripcion)}\n` +
-        `🏷 Categoría: *${escapeMarkdown(categoria)}*`
+        `*Gasto registrado*\n` +
+        `Monto: *${escapeMarkdown(formattedMonto)}*\n` +
+        `Descripción: ${escapeMarkdown(descripcion)}\n` +
+        `Categoría: *${escapeMarkdown(categoria)}*`
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /gasto: ${msg}`);
-      await safeReply(ctx, `❌ No pude registrar el gasto\\.\n${escapeMarkdown(msg)}`);
+      await safeReply(ctx, `No pude registrar el gasto\\.\n${escapeMarkdown(msg)}`);
     } finally {
       await deleteCommandMessage(ctx);
     }
@@ -72,10 +72,10 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
 /** Extrae el monto numérico y la descripción de los argumentos del comando /gasto. */
 function parseGasto(args: string): { monto: number | null; descripcion: string } {
   const match = args.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/);
-  if (!match) return { monto: null, descripcion: '' };
+  if (!match) return { monto: null, descripcion: ''};
 
   const monto = parseFloat(match[1]!.replace(',', '.'));
-  if (Number.isNaN(monto) || monto <= 0) return { monto: null, descripcion: '' };
+  if (Number.isNaN(monto) || monto <= 0) return { monto: null, descripcion: ''};
 
   return { monto, descripcion: match[2]!.trim() };
 }

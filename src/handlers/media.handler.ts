@@ -21,7 +21,7 @@ async function resolveUserFolder(ctx: BotContext): Promise<string | null> {
 
     if (!folder) {
         await ctx.reply(
-            '⚠️ Primero escribe /start para registrarte\\.',
+            'Primero escribe /start para registrarte\\.',
             { parse_mode: 'MarkdownV2' }
         );
         return null;
@@ -30,7 +30,7 @@ async function resolveUserFolder(ctx: BotContext): Promise<string | null> {
     return folder;
 }
 
-async function reactToMessage(ctx: BotContext, emoji: '👍' | '👎'): Promise<void> {
+async function reactToMessage(ctx: BotContext, emoji: '👍'| '👎'): Promise<void> {
     const chatId = ctx.chat?.id;
     const messageId = ctx.message?.message_id;
     if (!chatId || !messageId) return;

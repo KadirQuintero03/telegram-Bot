@@ -47,7 +47,7 @@ class SchedulerService {
                     try {
                         await this.bot.telegram.sendMessage(
                             reminder.chatId,
-                            `⏰ *Recordatorio:*\n${this.escape(reminder.task)}`,
+                            `*Recordatorio:*\n${this.escape(reminder.task)}`,
                             { parse_mode: 'MarkdownV2' }
                         );
                     } catch (err) {
@@ -99,7 +99,7 @@ class SchedulerService {
 
             for (const chatId of new Set(gastos.map((g) => g.chatId))) {
                 const message =
-                    `📊 *Resumen semanal de gastos*\n\n` +
+                    `*Resumen semanal de gastos*\n\n` +
                     `${lines}\n\n` +
                     `TOTAL: *$${this.escape(total.toLocaleString('es-CO'))}*`;
                 try {

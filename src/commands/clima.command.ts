@@ -27,7 +27,7 @@ export function registerClimaCommand(bot: Telegraf<BotContext>): void {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /clima: ${msg}`);
-      await ctx.reply(`❌ No pude obtener el clima\\. ${msg.includes('ciudad') ? msg : 'Intenta de nuevo más tarde\\.'}`, {
+      await ctx.reply(`No pude obtener el clima\\. ${msg.includes('ciudad') ? msg : 'Intenta de nuevo más tarde\\.'}`, {
         parse_mode: 'MarkdownV2',
       });
     } finally {

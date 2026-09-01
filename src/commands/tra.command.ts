@@ -20,7 +20,7 @@ function resolveTextToTranslate(ctx: BotContext, args: string): { text?: string;
     if (!repliedText) {
       return {
         error:
-          '⚠️ El mensaje al que respondiste no tiene texto para traducir\\.',
+          'El mensaje al que respondiste no tiene texto para traducir\\.',
       };
     }
     return { text: repliedText };
@@ -56,7 +56,7 @@ export function registerTraCommand(bot: Telegraf<BotContext>): void {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /tra: ${msg}`);
-      await ctx.reply('❌ No pude traducir el texto\\. Intenta de nuevo más tarde\\.', {
+      await ctx.reply('No pude traducir el texto\\. Intenta de nuevo más tarde\\.', {
         parse_mode: 'MarkdownV2',
       });
     } finally {

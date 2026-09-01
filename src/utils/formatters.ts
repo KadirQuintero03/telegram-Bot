@@ -9,12 +9,12 @@ export function escapeMarkdown(text: string): string {
 export function formatWeatherMessage(data: WeatherData): string {
   const city = escapeMarkdown(`${data.city}, ${data.country}`);
   return (
-    `🌤 *Clima en ${city}*\n\n` +
-    `🌡 Temperatura: *${data.temperature}${data.unit}*\n` +
-    `🤔 Sensación térmica: *${data.feelsLike}${data.unit}*\n` +
-    `💧 Humedad: *${data.humidity}%*\n` +
-    `💨 Viento: *${data.windSpeed} km/h*\n` +
-    `📋 Estado: *${escapeMarkdown(data.description)}*`
+    `*Clima en ${city}*\n\n` +
+    `Temperatura: *${data.temperature}${data.unit}*\n` +
+    `Sensación térmica: *${data.feelsLike}${data.unit}*\n` +
+    `Humedad: *${data.humidity}%*\n` +
+    `Viento: *${data.windSpeed} km/h*\n` +
+    `Estado: *${escapeMarkdown(data.description)}*`
   );
 }
 
@@ -23,8 +23,8 @@ export function formatTranslationMessage(result: TranslationResult): string {
   const translated = escapeMarkdown(result.translatedText);
   const lang = escapeMarkdown(result.detectedLanguage);
   return (
-    `📝 *Original \\(${lang}\\):*\n${original}\n\n` +
-    `✅ *Traducción:*\n${translated}`
+    `*Original \\(${lang}\\):*\n${original}\n\n` +
+    `*Traducción:*\n${translated}`
   );
 }
 
@@ -36,7 +36,7 @@ export function formatDolarRateMessage(data: DolarRate): string {
   const rate = escapeMarkdown(formatCop(data.rate));
   const date = escapeMarkdown(data.lastUpdate);
   return (
-    `💵 *Precio del Dólar hoy*\n\n` +
+    `*Precio del Dólar hoy*\n\n` +
     `1 USD \\= *$${rate} COP*\n\n`
   );
 }
@@ -49,8 +49,8 @@ export function formatDolarConversionMessage(data: DolarConversion): string {
   const rate = escapeMarkdown(formatCop(data.rate));
   const date = escapeMarkdown(data.lastUpdate);
   return (
-    `💵 *Conversión de Dólares a Pesos*\n\n` +
+    `*Conversión de Dólares a Pesos*\n\n` +
     `$${usd} USD \\= *$${cop} COP*\n\n` +
-    `📊 Tasa usada: 1 USD \\= $${rate} COP\n`
+    `Tasa usada: 1 USD \\= $${rate} COP\n`
   );
 }

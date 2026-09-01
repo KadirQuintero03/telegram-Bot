@@ -3,5 +3,5 @@ export function commandTrigger(name: string): RegExp {
 }
 
 export function getCommandArgs(text: string): string {
-  return text.split(/\s+/).slice(1).join(' ');
+  return text.split(/\s+/).slice(1).join('');
 }

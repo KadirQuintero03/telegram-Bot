@@ -2,12 +2,12 @@ export function validateCityArg(text: string | undefined): { valid: boolean; cit
   if (!text || text.trim().length === 0) {
     return {
       valid: false,
-      error: '⚠️ Debes indicar una ciudad. Ejemplo: `/clima Bogotá`',
+      error: 'Debes indicar una ciudad. Ejemplo: `/clima Bogotá`',
     };
   }
   const city = text.trim();
   if (city.length > 100) {
-    return { valid: false, error: '⚠️ El nombre de la ciudad es demasiado largo.' };
+    return { valid: false, error: 'El nombre de la ciudad es demasiado largo.' };
   }
   return { valid: true, city };
 }
@@ -16,11 +16,11 @@ export function validateTranslateArg(text: string | undefined): { valid: boolean
   if (!text || text.trim().length === 0) {
     return {
       valid: false,
-      error: '⚠️ Debes proporcionar un texto. Ejemplo: `/tra Hello world`',
+      error: 'Debes proporcionar un texto. Ejemplo: `/tra Hello world`',
     };
   }
   if (text.trim().length > 500) {
-    return { valid: false, error: '⚠️ El texto no puede superar los 500 caracteres.' };
+    return { valid: false, error: 'El texto no puede superar los 500 caracteres.' };
   }
   return { valid: true, text: text.trim() };
 }
@@ -33,13 +33,13 @@ export function validateTikTokUrl(
   if (!text || text.trim().length === 0) {
     return {
       valid: false,
-      error: '⚠️ Debes proporcionar un enlace de TikTok. Ejemplo: `/get https://vm.tiktok.com/XXXXXXX`',
+      error: 'Debes proporcionar un enlace de TikTok. Ejemplo: `/get https://vm.tiktok.com/XXXXXXX`',
     };
   }
 
   const url = text.trim().split(/\s+/)[0]!;
   if (!TIKTOK_URL_REGEX.test(url)) {
-    return { valid: false, error: '⚠️ El enlace no parece ser de TikTok. Verifica que esté completo.' };
+    return { valid: false, error: 'El enlace no parece ser de TikTok. Verifica que esté completo.' };
   }
 
   return { valid: true, url };
@@ -60,15 +60,15 @@ export function validateDeleteArg(
   if (!text || text.trim().length === 0) {
     return {
       valid: false,
-      error: `⚠️ Debes indicar cuántos mensajes borrar. Ejemplo: \`/borrar 10\``,
+      error: `Debes indicar cuántos mensajes borrar. Ejemplo: \`/borrar 10\``,
     };
   }
   const n = parseInt(text.trim(), 10);
   if (isNaN(n) || n < 1) {
-    return { valid: false, error: '⚠️ El número debe ser un entero mayor a 0.' };
+    return { valid: false, error: 'El número debe ser un entero mayor a 0.' };
   }
   if (n > max) {
-    return { valid: false, error: `⚠️ El máximo permitido es ${max} mensajes.` };
+    return { valid: false, error: `El máximo permitido es ${max} mensajes.` };
   }
   return { valid: true, count: n };
 }
@@ -77,31 +77,31 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateEmailAddress(text: string | undefined): { valid: boolean; email?: string; error?: string } {
   if (!text || text.trim().length === 0) {
-    return { valid: false, error: '⚠️ Debes indicar un correo de destino\\.' };
+    return { valid: false, error: 'Debes indicar un correo de destino\\.' };
   }
   const email = text.trim();
   if (!EMAIL_REGEX.test(email)) {
-    return { valid: false, error: '⚠️ El correo no tiene un formato válido\\.' };
+    return { valid: false, error: 'El correo no tiene un formato válido\\.' };
   }
   return { valid: true, email };
 }
 
 export function validateEmailSubject(text: string | undefined): { valid: boolean; subject?: string; error?: string } {
   if (!text || text.trim().length === 0) {
-    return { valid: false, error: '⚠️ Debes indicar un asunto\\.' };
+    return { valid: false, error: 'Debes indicar un asunto\\.' };
   }
   if (text.trim().length > 200) {
-    return { valid: false, error: '⚠️ El asunto no puede superar los 200 caracteres\\.' };
+    return { valid: false, error: 'El asunto no puede superar los 200 caracteres\\.' };
   }
   return { valid: true, subject: text.trim() };
 }
 
 export function validateEmailBody(text: string | undefined): { valid: boolean; body?: string; error?: string } {
   if (!text || text.trim().length === 0) {
-    return { valid: false, error: '⚠️ Debes indicar el cuerpo del correo\\.' };
+    return { valid: false, error: 'Debes indicar el cuerpo del correo\\.' };
   }
   if (text.trim().length > 4000) {
-    return { valid: false, error: '⚠️ El cuerpo no puede superar los 4000 caracteres\\.' };
+    return { valid: false, error: 'El cuerpo no puede superar los 4000 caracteres\\.' };
   }
   return { valid: true, body: text.trim() };
 }
@@ -119,15 +119,15 @@ export function validateDolarArg(
   const amount = Number(normalized);
 
   if (Number.isNaN(amount) || !Number.isFinite(amount)) {
-    return { valid: false, error: '⚠️ Debes indicar un número válido. Ejemplo: `/dolar 20`' };
+    return { valid: false, error: 'Debes indicar un número válido. Ejemplo: `/dolar 20`' };
   }
 
   if (amount <= 0) {
-    return { valid: false, error: '⚠️ La cantidad de dólares debe ser mayor a 0.' };
+    return { valid: false, error: 'La cantidad de dólares debe ser mayor a 0.' };
   }
 
   if (amount > 1_000_000_000) {
-    return { valid: false, error: '⚠️ La cantidad es demasiado grande.' };
+    return { valid: false, error: 'La cantidad es demasiado grande.' };
   }
 
   return { valid: true, amount };
@@ -155,7 +155,7 @@ export function validateDownloadUrl(
     return {
       valid: false,
       error:
-        '⚠️ Debes proporcionar un enlace. Ejemplos:\n' +
+        'Debes proporcionar un enlace. Ejemplos:\n' +
         '`/get https://vm.tiktok.com/XXX`\n' +
         '`/get https://www.instagram.com/reel/XXX`\n' +
         '`/get https://youtube.com/shorts/XXX`',
@@ -168,7 +168,7 @@ export function validateDownloadUrl(
   if (!platform) {
     return {
       valid: false,
-      error: '⚠️ El enlace no es de TikTok, Instagram ni YouTube Shorts.',
+      error: 'El enlace no es de TikTok, Instagram ni YouTube Shorts.',
     };
   }
 

@@ -45,14 +45,14 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
 
     const app = express();
 
-    app.use(cors({ origin: '*' }));
+    app.use(cors({ origin: '*'}));
     app.use(express.json());
 
     app.post('/auth/request-code', async (req: Request, res: Response) => {
         const phone = (req.body?.phone as string) ?? '';
 
         if (!phone.trim()) {
-            return res.status(400).json({ error: 'Debes indicar un número de teléfono.' });
+            return res.status(400).json({ error: 'Debes indicar un número de teléfono.'});
         }
 
         try {
@@ -71,7 +71,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
         const code = (req.body?.code as string) ?? '';
 
         if (!phone.trim() || !code.trim()) {
-            return res.status(400).json({ error: 'Debes indicar el teléfono y el código.' });
+            return res.status(400).json({ error: 'Debes indicar el teléfono y el código.'});
         }
 
         try {
@@ -91,7 +91,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
         const relativePath = (req.query.path as string) ?? '';
 
         if (!owner) {
-            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.' });
+            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.'});
         }
 
         try {
@@ -152,7 +152,7 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
         const relativePath = (req.query.path as string) ?? '';
 
         if (!owner) {
-            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.' });
+            return res.status(400).json({ error: 'Falta identificar al usuario (owner). Inicia sesión de nuevo.'});
         }
 
         try {

@@ -19,7 +19,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
         if (!session.category || !session.userFolder) {
             cloudSessionService.updateSession(userId, { step: null });
             await ctx.reply(
-                '⚠️ Tu sesión de /cloud expiró o se perdió\\. Vuelve a ejecutar /cloud\\.',
+                'Tu sesión de /cloud expiró o se perdió\\. Vuelve a ejecutar /cloud\\.',
                 { parse_mode: 'MarkdownV2' }
             );
             return;
@@ -30,7 +30,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
 
         if (page.length === 0) {
             cloudSessionService.updateSession(userId, { step: null });
-            await ctx.reply('⚠️ Ya no hay archivos en esta página\\. Vuelve a ejecutar /cloud\\.', {
+            await ctx.reply('Ya no hay archivos en esta página\\. Vuelve a ejecutar /cloud\\.', {
                 parse_mode: 'MarkdownV2',
             });
             return;
@@ -40,7 +40,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
             if (session.step === 'awaiting_specific_range') {
                 const match = text.trim().match(/^(\d+)\s*-\s*(\d+)$/);
                 if (!match) {
-                    await ctx.reply('⚠️ Formato inválido\\. Usa `N-M`, por ejemplo `2-5`\\.', {
+                    await ctx.reply('Formato inválido\\. Usa `N-M`, por ejemplo `2-5`\\.', {
                         parse_mode: 'MarkdownV2',
                     });
                     return;
@@ -50,7 +50,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
                 const end = parseInt(match[2]!, 10);
 
                 if (start < 1 || end < start || end > page.length) {
-                    await ctx.reply(`⚠️ Rango inválido\\. Debe estar entre 1 y ${page.length}\\.`, {
+                    await ctx.reply(`Rango inválido\\. Debe estar entre 1 y ${page.length}\\.`, {
                         parse_mode: 'MarkdownV2',
                     });
                     return;
@@ -65,7 +65,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
             if (session.step === 'awaiting_unique_number') {
                 const n = parseInt(text.trim(), 10);
                 if (isNaN(n) || n < 1 || n > page.length) {
-                    await ctx.reply(`⚠️ Número inválido\\. Debe estar entre 1 y ${page.length}\\.`, {
+                    await ctx.reply(`Número inválido\\. Debe estar entre 1 y ${page.length}\\.`, {
                         parse_mode: 'MarkdownV2',
                     });
                     return;
@@ -80,7 +80,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
             const msg = error instanceof Error ? error.message : 'Error desconocido';
             console.error(`[ERROR] CloudFlow: ${msg}`);
             cloudSessionService.updateSession(userId, { step: null });
-            await ctx.reply('❌ Ocurrió un error procesando tu solicitud\\. Intenta de nuevo con /cloud\\.', {
+            await ctx.reply('Ocurrió un error procesando tu solicitud\\. Intenta de nuevo con /cloud\\.', {
                 parse_mode: 'MarkdownV2',
             });
             return;

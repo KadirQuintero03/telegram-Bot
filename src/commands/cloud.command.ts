@@ -9,10 +9,10 @@ import { commandTrigger } from '../utils/commandMatcher.js';
 import { deleteCommandMessage } from '../utils/telegramHelpers.js';
 
 const CATEGORY_LABELS: Record<MediaCategory, string> = {
-    Imagenes: '🖼 Imágenes',
-    Video: '🎬 Videos',
-    Audio: '🎵 Audios',
-    Documentos: '📄 Documentos',
+    Imagenes: 'Imágenes',
+    Video: 'Videos',
+    Audio: 'Audios',
+    Documentos: 'Documentos',
 };
 
 const VALID_CATEGORIES: MediaCategory[] = ['Imagenes', 'Video', 'Audio', 'Documentos'];
@@ -38,13 +38,13 @@ function buildMenuKeyboard() {
 function buildPageKeyboard(hasNext: boolean) {
     const rows = [
         [
-            Markup.button.callback('📦 Todos', 'cloud:all'),
-            Markup.button.callback('🆚 Rango', 'cloud:specific'),
-            Markup.button.callback('1️⃣ Único', 'cloud:unique'),
+            Markup.button.callback('Todos', 'cloud:all'),
+            Markup.button.callback('Rango', 'cloud:specific'),
+            Markup.button.callback('1⃣ Único', 'cloud:unique'),
         ],
     ];
     if (hasNext) {
-        rows.push([Markup.button.callback('➡️ Siguiente', 'cloud:next')]);
+        rows.push([Markup.button.callback('Siguiente', 'cloud:next')]);
     }
     return Markup.inlineKeyboard(rows);
 }
@@ -63,14 +63,14 @@ function buildPageMessage(
     return (
         `${CATEGORY_LABELS[category]}\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
-        `📦 Total de archivos: *${allFiles.length}*\n` +
-        `💾 Espacio ocupado: *${totalSize}*\n\n` +
-        `📋 Mostrando archivos *${offset + 1}* a *${offset + page.length}*:\n${listText}\n\n` +
+        `Total de archivos: *${allFiles.length}*\n` +
+        `Espacio ocupado: *${totalSize}*\n\n` +
+        `Mostrando archivos *${offset + 1}* a *${offset + page.length}*:\n${listText}\n\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
-        `📦 *Todos* — envía estos ${page.length} archivos al chat\\.\n` +
-        `🆚 *Rango* — indica un rango \\(ej\\. 2\\-5\\) para enviar\\.\n` +
-        `1️⃣ *Único* — indica un solo número para enviar ese archivo\\.\n` +
-        `➡️ *Siguiente* — muestra los próximos archivos\\.`
+        `*Todos* — envía estos ${page.length} archivos al chat\\.\n` +
+        `*Rango* — indica un rango \\(ej\\. 2\\-5\\) para enviar\\.\n` +
+        `1⃣ *Único* — indica un solo número para enviar ese archivo\\.\n` +
+        `*Siguiente* — muestra los próximos archivos\\.`
     );
 }
 
@@ -90,7 +90,7 @@ export async function sendFiles(ctx: BotContext, filePaths: string[]): Promise<v
 
     if (failedCount > 0) {
         await ctx.reply(
-            `⚠️ No se pudieron enviar *${failedCount}* de los *${filePaths.length}* archivos\\. Revisa los logs del bot\\.`,
+            `No se pudieron enviar *${failedCount}* de los *${filePaths.length}* archivos\\. Revisa los logs del bot\\.`,
             { parse_mode: 'MarkdownV2' }
         );
     }
@@ -102,7 +102,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
         const userFolder = resolveUserFolder(userId);
 
         if (!userId || !userFolder) {
-            await ctx.reply('⚠️ Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
+            await ctx.reply('Primero escribe /start para registrarte\\.', { parse_mode: 'MarkdownV2' });
             await deleteCommandMessage(ctx);
             return;
         }
@@ -111,7 +111,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
         cloudSessionService.resetSession(userId);
 
         await ctx.reply(
-            '☁️ *Tus archivos en la nube*\n\n¿A cuál de tus directorios personales deseas acceder?',
+            '*Tus archivos en la nube*\n\n¿A cuál de tus directorios personales deseas acceder?',
             { parse_mode: 'MarkdownV2', reply_markup: buildMenuKeyboard().reply_markup }
         );
 
@@ -131,7 +131,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
         const allFiles = fileBrowserService.listFiles(userFolder, category);
 
         if (allFiles.length === 0) {
-            await ctx.reply(`📭 No tienes archivos guardados en *${CATEGORY_LABELS[category]}*\\.`, {
+            await ctx.reply(`No tienes archivos guardados en *${CATEGORY_LABELS[category]}*\\.`, {
                 parse_mode: 'MarkdownV2',
             });
             return;
@@ -164,7 +164,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
         const nextOffset = session.offset + FILE_PAGE_SIZE;
 
         if (nextOffset >= allFiles.length) {
-            await ctx.reply('📭 No hay más archivos para mostrar\\.', { parse_mode: 'MarkdownV2' });
+            await ctx.reply('No hay más archivos para mostrar\\.', { parse_mode: 'MarkdownV2' });
             return;
         }
 
@@ -199,7 +199,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
 
         cloudSessionService.updateSession(userId, { step: 'awaiting_specific_range' });
         await ctx.reply(
-            '🆚 Escribe el rango de archivos que deseas recibir\\.\n' +
+            'Escribe el rango de archivos que deseas recibir\\.\n' +
             'Usa el formato `N-M`, por ejemplo: `2-5`\\.',
             { parse_mode: 'MarkdownV2' }
         );
@@ -211,7 +211,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
         if (!userId) return;
 
         cloudSessionService.updateSession(userId, { step: 'awaiting_unique_number' });
-        await ctx.reply('1️⃣ Escribe el número del archivo específico que deseas recibir\\.', {
+        await ctx.reply('1⃣ Escribe el número del archivo específico que deseas recibir\\.', {
             parse_mode: 'MarkdownV2',
         });
     });

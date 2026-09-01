@@ -26,7 +26,7 @@ export function createBot(): Telegraf<BotContext> {
     console.error(`[ERROR] Update ${ctx.update.update_id} provocó error: ${error.message}`);
     console.error(error.stack);
 
-    ctx.reply('😕 Ocurrió un error inesperado. Por favor intenta de nuevo.').catch(() => {
+    ctx.reply('Ocurrió un error inesperado. Por favor intenta de nuevo.').catch(() => {
       console.error('[ERROR] No se pudo enviar el mensaje de error al usuario.');
     });
   });

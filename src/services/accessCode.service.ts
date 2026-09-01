@@ -49,7 +49,7 @@ export class AccessCodeService {
         try {
             await this.bot.telegram.sendMessage(
                 user.telegramId,
-                `🔐 Tu código de acceso a GlowPic es: *${code}*\n\nExpira en 5 minutos. Si no fuiste tú, ignora este mensaje.`,
+                `Tu código de acceso a GlowPic es: *${code}*\n\nExpira en 5 minutos. Si no fuiste tú, ignora este mensaje.`,
                 { parse_mode: 'Markdown' }
             );
         } catch (err) {

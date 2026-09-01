@@ -1,83 +1,83 @@
-import { Telegraf } from 'telegraf';
-import { BotContext } from '../types/bot.types.js';
-import { TelegramService } from '../services/telegram.service.js';
-import { validateDeleteArg } from '../utils/validators.js';
-import { config } from '../config/env.js';
-import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
+// import { Telegraf } from 'telegraf';
+// import { BotContext } from '../types/bot.types.js';
+// import { TelegramService } from '../services/telegram.service.js';
+// import { validateDeleteArg } from '../utils/validators.js';
+// import { config } from '../config/env.js';
+// import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
 
-export function registerBorrarCommand(bot: Telegraf<BotContext>): void {
-  bot.hears(commandTrigger('borrar'), async (ctx) => {
+// export function registerBorrarCommand(bot: Telegraf<BotContext>): void {
+//   bot.hears(commandTrigger('borrar'), async (ctx) => {
 
-    if (!TelegramService.isGroup(ctx)) {
-      await ctx.reply('⚠️ El comando `/borrar` solo está disponible en grupos\\.', {
-        parse_mode: 'MarkdownV2',
-      });
-      return;
-    }
-
-
-    const isUserAdmin = await TelegramService.isUserAdmin(ctx);
-    if (!isUserAdmin) {
-      await ctx.reply('🚫 Solo los *administradores* del grupo pueden usar este comando\\.', {
-        parse_mode: 'MarkdownV2',
-      });
-      return;
-    }
+//     if (!TelegramService.isGroup(ctx)) {
+//       await ctx.reply('El comando `/borrar` solo está disponible en grupos\\.', {
+//         parse_mode: 'MarkdownV2',
+//       });
+//       return;
+//     }
 
 
-    const isBotAdmin = await TelegramService.isBotAdmin(ctx);
-    if (!isBotAdmin) {
-      await ctx.reply(
-        '⚠️ Necesito ser *administrador* del grupo para poder eliminar mensajes\\.',
-        { parse_mode: 'MarkdownV2' }
-      );
-      return;
-    }
-
-    const args = getCommandArgs(ctx.message.text);
-    const validation = validateDeleteArg(args, config.maxDeleteMessages);
-
-    if (!validation.valid) {
-      await ctx.reply(validation.error ?? 'Error de validación\\.', { parse_mode: 'MarkdownV2' });
-      return;
-    }
-
-    const count = validation.count!;
-    const currentMsgId = ctx.message.message_id;
-    let deleted = 0;
-    let failed = 0;
+//     const isUserAdmin = await TelegramService.isUserAdmin(ctx);
+//     if (!isUserAdmin) {
+//       await ctx.reply('Solo los *administradores* del grupo pueden usar este comando\\.', {
+//         parse_mode: 'MarkdownV2',
+//       });
+//       return;
+//     }
 
 
-    const idsToDelete: number[] = [];
-    for (let i = 0; i <= count; i++) {
-      idsToDelete.push(currentMsgId - i);
-    }
+//     const isBotAdmin = await TelegramService.isBotAdmin(ctx);
+//     if (!isBotAdmin) {
+//       await ctx.reply(
+//         'Necesito ser *administrador* del grupo para poder eliminar mensajes\\.',
+//         { parse_mode: 'MarkdownV2' }
+//       );
+//       return;
+//     }
 
-    for (const msgId of idsToDelete) {
-      if (msgId <= 0) break;
-      try {
-        await ctx.telegram.deleteMessage(ctx.chat!.id, msgId);
-        deleted++;
+//     const args = getCommandArgs(ctx.message.text);
+//     const validation = validateDeleteArg(args, config.maxDeleteMessages);
 
-        await new Promise((res) => setTimeout(res, 50));
-      } catch {
-        failed++;
-      }
-    }
+//     if (!validation.valid) {
+//       await ctx.reply(validation.error ?? 'Error de validación\\.', { parse_mode: 'MarkdownV2' });
+//       return;
+//     }
 
-
-    const confirmation = await ctx.reply(
-      `✅ Se eliminaron *${deleted}* mensajes\\.${failed > 0 ? ` \\(${failed} no se pudieron eliminar\\)` : ''}`,
-      { parse_mode: 'MarkdownV2' }
-    );
+//     const count = validation.count!;
+//     const currentMsgId = ctx.message.message_id;
+//     let deleted = 0;
+//     let failed = 0;
 
 
-    setTimeout(async () => {
-      try {
-        await ctx.telegram.deleteMessage(ctx.chat!.id, confirmation.message_id);
-      } catch {
+//     const idsToDelete: number[] = [];
+//     for (let i = 0; i <= count; i++) {
+//       idsToDelete.push(currentMsgId - i);
+//     }
 
-      }
-    }, 5000);
-  });
-}
+//     for (const msgId of idsToDelete) {
+//       if (msgId <= 0) break;
+//       try {
+//         await ctx.telegram.deleteMessage(ctx.chat!.id, msgId);
+//         deleted++;
+
+//         await new Promise((res) => setTimeout(res, 50));
+//       } catch {
+//         failed++;
+//       }
+//     }
+
+
+//     const confirmation = await ctx.reply(
+//       `Se eliminaron *${deleted}* mensajes\\.${failed > 0 ? ` \\(${failed} no se pudieron eliminar\\)` : ''}`,
+//       { parse_mode: 'MarkdownV2' }
+//     );
+
+
+//     setTimeout(async () => {
+//       try {
+//         await ctx.telegram.deleteMessage(ctx.chat!.id, confirmation.message_id);
+//       } catch {
+
+//       }
+//     }, 5000);
+//   });
+// }

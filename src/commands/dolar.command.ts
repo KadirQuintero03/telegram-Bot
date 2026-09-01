@@ -34,7 +34,7 @@ export function registerDolarCommand(bot: Telegraf<BotContext>): void {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /dolar: ${msg}`);
-      await ctx.reply('❌ No pude obtener el valor del dólar\\. Intenta de nuevo más tarde\\.', {
+      await ctx.reply('No pude obtener el valor del dólar\\. Intenta de nuevo más tarde\\.', {
         parse_mode: 'MarkdownV2',
       });
     } finally {

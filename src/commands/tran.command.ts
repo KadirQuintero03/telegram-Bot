@@ -8,8 +8,8 @@ import { escapeMarkdown } from '../utils/formatters.js';
 const geminiService = new GeminiService();
 
 const TRANSCRIBE_INSTRUCTION =
-  'Transcribe fielmente el audio adjunto. Responde ÚNICAMENTE con la transcripción literal ' +
-  'del audio, en el idioma en que fue hablado, sin agregar comentarios, títulos ni texto adicional. ' +
+  'Transcribe fielmente el audio adjunto. Responde ÚNICAMENTE con la transcripción literal '+
+  'del audio, en el idioma en que fue hablado, sin agregar comentarios, títulos ni texto adicional. '+
   'Si no logras entender ninguna parte del audio, responde exactamente: "NO_SE_ENTIENDE".';
 
 interface AudioRef {
@@ -47,7 +47,7 @@ export function registerTranCommand(bot: Telegraf<BotContext>): void {
 
     if (!audio) {
       await ctx.reply(
-        '⚠️ Debes *responder* a una nota de voz o a un audio con `/tran` para transcribirlo\\.',
+        'Debes *responder* a una nota de voz o a un audio con `/tran` para transcribirlo\\.',
         { parse_mode: 'MarkdownV2' }
       );
       await deleteCommandMessage(ctx);
@@ -66,20 +66,20 @@ export function registerTranCommand(bot: Telegraf<BotContext>): void {
       );
 
       if (transcription.trim() === 'NO_SE_ENTIENDE') {
-        await ctx.reply('❌ No logré entender el audio con claridad\\. Intenta con uno más claro\\.', {
+        await ctx.reply('No logré entender el audio con claridad\\. Intenta con uno más claro\\.', {
           parse_mode: 'MarkdownV2',
         });
         return;
       }
 
       await ctx.reply(
-        `🎙 *Transcripción del audio*\n\n${escapeMarkdown(transcription)}`,
+        `*Transcripción del audio*\n\n${escapeMarkdown(transcription)}`,
         { parse_mode: 'MarkdownV2' }
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /tran: ${msg}`);
-      await ctx.reply(`❌ No pude transcribir el audio\\.\n${escapeMarkdown(msg)}`, {
+      await ctx.reply(`No pude transcribir el audio\\.\n${escapeMarkdown(msg)}`, {
         parse_mode: 'MarkdownV2',
       });
     } finally {

@@ -10,10 +10,10 @@ import { escapeMarkdown } from '../utils/formatters.js';
 const geminiService = new GeminiService();
 
 const EXTRACTION_PROMPT =
-  'Eres un asistente que extrae datos de recordatorios. ' +
-  'A partir del texto, devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: ' +
-  '{"tarea":"...","fecha":"AAAA-MM-DD","hora":"HH:MM"} . ' +
-  'Interpreta frases naturales (ej: "mañana", "el lunes", "a las 8am"). ' +
+  'Eres un asistente que extrae datos de recordatorios. '+
+  'A partir del texto, devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: '+
+  '{"tarea":"...","fecha":"AAAA-MM-DD","hora":"HH:MM"} . '+
+  'Interpreta frases naturales (ej: "mañana", "el lunes", "a las 8am"). '+
   'Usa la fecha de HOY como referencia. No agregues texto adicional, solo el JSON.';
 
 interface ParsedReminder {
@@ -40,7 +40,7 @@ export function registerRecordatorioCommand(bot: Telegraf<BotContext>): void {
     const chatId = ctx.chat?.id;
 
     if (!prompt) {
-      await ctx.reply('⚠️ Debes escribir un recordatorio. Ejemplo: `/recordatorio recuérdame revisar el correo mañana a las 8am`', {
+      await ctx.reply('Debes escribir un recordatorio. Ejemplo: `/recordatorio recuérdame revisar el correo mañana a las 8am`', {
         parse_mode: 'Markdown',
       });
       await deleteCommandMessage(ctx);
@@ -48,7 +48,7 @@ export function registerRecordatorioCommand(bot: Telegraf<BotContext>): void {
     }
 
     if (!chatId) {
-      await ctx.reply('❌ No se pudo determinar el chat de destino.', { parse_mode: 'MarkdownV2' });
+      await ctx.reply('No se pudo determinar el chat de destino.', { parse_mode: 'MarkdownV2' });
       await deleteCommandMessage(ctx);
       return;
     }
@@ -76,14 +76,14 @@ export function registerRecordatorioCommand(bot: Telegraf<BotContext>): void {
       const formattedTask = escapeMarkdown(parsed.tarea);
 
       await ctx.reply(
-        `✅ *Recordatorio programado:* \n` +
-        `"${formattedTask}" para el *${formattedDate}* a las *${formattedTime}*\\.`,
+        `*Recordatorio programado:* \n` +
+        `"${formattedTask}"para el *${formattedDate}* a las *${formattedTime}*\\.`,
         { parse_mode: 'MarkdownV2' }
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /recordatorio: ${msg}`);
-      await ctx.reply(`❌ No pude programar el recordatorio\\.\n${escapeMarkdown(msg)}`, {
+      await ctx.reply(`No pude programar el recordatorio\\.\n${escapeMarkdown(msg)}`, {
         parse_mode: 'MarkdownV2',
       });
     } finally {

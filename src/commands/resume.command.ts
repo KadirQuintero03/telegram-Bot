@@ -8,8 +8,8 @@ import { escapeMarkdown } from '../utils/formatters.js';
 const geminiService = new GeminiService();
 
 const SUMMARY_INSTRUCTION =
-  'Resume brevemente el contenido adjunto (o el texto, si es texto) en español. ' +
-  'El resumen debe tener como máximo 4-5 líneas, yendo directo a las ideas principales, ' +
+  'Resume brevemente el contenido adjunto (o el texto, si es texto) en español. '+
+  'El resumen debe tener como máximo 4-5 líneas, yendo directo a las ideas principales, '+
   'sin agregar opiniones ni información que no esté presente en el contenido original.';
 
 const MAX_MEDIA_BYTES = 18 * 1024 * 1024;
@@ -86,7 +86,7 @@ export function registerResumeCommand(bot: Telegraf<BotContext>): void {
 
     if (!target) {
       await ctx.reply(
-        '⚠️ Debes *responder* a un mensaje con texto, audio, imagen, video o documento con `/resume`\\.',
+        'Debes *responder* a un mensaje con texto, audio, imagen, video o documento con `/resume`\\.',
         { parse_mode: 'MarkdownV2' }
       );
       await deleteCommandMessage(ctx);
@@ -104,7 +104,7 @@ export function registerResumeCommand(bot: Telegraf<BotContext>): void {
         const file = await downloadTelegramFile(ctx, target.fileId, target.mimeType, target.fileName);
 
         if (file.buffer.byteLength > MAX_MEDIA_BYTES) {
-          await ctx.reply('⚠️ El archivo es demasiado pesado para poder resumirlo\\.', {
+          await ctx.reply('El archivo es demasiado pesado para poder resumirlo\\.', {
             parse_mode: 'MarkdownV2',
           });
           return;
@@ -113,11 +113,11 @@ export function registerResumeCommand(bot: Telegraf<BotContext>): void {
         summary = await geminiService.generateFromMedia(file.buffer, target.mimeType, SUMMARY_INSTRUCTION);
       }
 
-      await ctx.reply(`📝 *Resumen*\n\n${escapeMarkdown(summary)}`, { parse_mode: 'MarkdownV2' });
+      await ctx.reply(`*Resumen*\n\n${escapeMarkdown(summary)}`, { parse_mode: 'MarkdownV2' });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /resume: ${msg}`);
-      await ctx.reply(`❌ No pude generar el resumen\\.\n${escapeMarkdown(msg)}`, {
+      await ctx.reply(`No pude generar el resumen\\.\n${escapeMarkdown(msg)}`, {
         parse_mode: 'MarkdownV2',
       });
     } finally {

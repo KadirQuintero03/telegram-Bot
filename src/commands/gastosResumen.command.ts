@@ -12,7 +12,7 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
     deleteCommandMessage(ctx);
 
     if (!chatId) {
-      await safeReply(ctx, '❌ No se pudo determinar el chat.');
+      await safeReply(ctx, 'No se pudo determinar el chat.');
       return;
     }
 
@@ -22,7 +22,7 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
       .filter((g) => isWithinLast7Days(new Date(g.fecha)));
 
     if (gastos.length === 0) {
-      await safeReply(ctx, '📭 No tienes gastos registrados en los últimos 7 días.');
+      await safeReply(ctx, 'No tienes gastos registrados en los últimos 7 días.');
       return;
     }
 
@@ -35,7 +35,7 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
 
     await safeReply(
       ctx,
-      `📊 *Resumen de gastos \\(últimos 7 días\\)*\n\n` +
+      `*Resumen de gastos \\(últimos 7 días\\)*\n\n` +
       `${lines}\n\n` +
       `TOTAL: *$${escapeMarkdown(total.toLocaleString('es-CO'))}*`
     );
