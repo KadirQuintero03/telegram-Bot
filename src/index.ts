@@ -63,7 +63,7 @@ async function main(): Promise<void> {
     bot.stop('SIGTERM');
   });
 
-  await bot.launch();
+  await bot.launch({ dropPendingUpdates: true });
 
   const botInfo = await bot.telegram.getMe();
   console.info(`[INFO] ✅ Bot iniciado correctamente: @${botInfo.username} (ID: ${botInfo.id})`);
