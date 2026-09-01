@@ -1,7 +1,7 @@
 {
-  "name": "telegram-bot",
+  "name": "teldrive",
   "version": "1.0.0",
-  "description": "Bot de Telegram con TypeScript, Telegraf v4, clima, traducción y administración de grupos",
+  "description": "TeleDrive: bot de Telegram con TypeScript, Telegraf v4, clima, traducción, nube y productividad",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
@@ -23,7 +23,9 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "node-cache": "^5.1.2",
+    "node-cron": "^4.6.0",
     "nodemailer": "^9.0.1",
+    "systeminformation": "^5.33.6",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {

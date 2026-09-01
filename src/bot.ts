@@ -6,6 +6,7 @@ import { registerAllCommands } from './commands/index.js';
 import { registerMediaHandlers } from './handlers/media.handler.js';
 import { registerEmailFlowHandler } from './handlers/emailFlow.handler.js';
 import { registerCloudFlowHandler } from './handlers/cloudFlow.handler.js';
+import { schedulerService } from './services/scheduler.service.js';
 
 export function createBot(): Telegraf<BotContext> {
   const bot = new Telegraf<BotContext>(config.botToken);
@@ -16,6 +17,9 @@ export function createBot(): Telegraf<BotContext> {
   registerEmailFlowHandler(bot);
   registerCloudFlowHandler(bot);
   registerMediaHandlers(bot);
+
+  schedulerService.setBot(bot);
+  schedulerService.start();
 
   bot.catch((err, ctx) => {
     const error = err instanceof Error ? err : new Error(String(err));

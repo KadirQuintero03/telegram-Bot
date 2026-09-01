@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
@@ -40,7 +40,7 @@ function toRelative(ownerRoot: string, absolutePath: string): string {
     return path.relative(ownerRoot, absolutePath).split(path.sep).join('/');
 }
 
-export function createExplorerServer(bot: Telegraf<BotContext>) {
+export function createExplorerServer(bot: Telegraf<BotContext>): Express {
     accessCodeService.setBot(bot);
 
     const app = express();

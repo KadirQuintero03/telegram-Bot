@@ -17,6 +17,12 @@ async function main(): Promise<void> {
 
   const bot = createBot();
 
+  try {
+    await bot.telegram.setMyName('TeleDrive');
+  } catch (err) {
+    console.error('[WARN] No se pudo establecer el nombre del bot (setMyName):', err);
+  }
+
 
   try {
     await bot.telegram.setMyCommands([
@@ -29,7 +35,12 @@ async function main(): Promise<void> {
       { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
       { command: 'web', description: 'Link para acceder a GlowPic' },
-      { command: 'phone', description: 'Dar acceso a tu telefono para la web' }
+      { command: 'phone', description: 'Dar acceso a tu telefono para la web' },
+      { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
+      { command: 'gasto', description: 'Registrar un gasto' },
+      { command: 'gastos_resumen', description: 'Ver resumen de gastos de los últimos 7 días' },
+      { command: 'estado', description: 'Ver métricas del sistema' },
+      { command: 'ejecutar', description: 'Ejecutar comando de terminal (solo admin)' }
     ]);
   } catch (err) {
     console.error('[WARN] No se pudieron registrar los comandos (setMyCommands):', err);

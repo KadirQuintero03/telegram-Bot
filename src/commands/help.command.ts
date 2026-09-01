@@ -44,7 +44,19 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `📱 */phone*\n` +
       `Vincula tu número de teléfono con tu cuenta de Telegram\\.\n\n` +
       `🌐 */web*\n` +
-      `Envía el enlace para iniciar sesión en GlowPic \\(requiere haber vinculado tu teléfono con /phone\\)\\.\n` +
+      `Envía el enlace para iniciar sesión en GlowPic \\(requiere haber vinculado tu teléfono con /phone\\)\\.\n\n` +
+      `⏰ */recordatorio \\<mensaje natural\\>*\n` +
+      `Programa un recordatorio en lenguaje natural \\(ej: \`/recordatorio revisar el correo mañana a las 8am\`\\)\\.\n\n` +
+      `💸 */gasto \\<cantidad\\> \\<descripción\\>*\n` +
+      `Registra un gasto y lo clasifica automáticamente en una categoría\\.\n` +
+      `📌 Ejemplo: \`/gasto 15000 almuerzo\`\n\n` +
+      `📊 */gastos_resumen*\n` +
+      `Muestra el resumen de tus gastos de los últimos 7 días\\.\n\n` +
+      `🖥️ */estado*\n` +
+      `Muestra métricas del sistema \\(CPU, RAM, disco\\)\\.\n\n` +
+      `⚙️ */ejecutar \\<comando\\>*\n` +
+      `Ejecuta un comando de terminal \\(solo administrador\\)\\.\n` +
+      `📌 Ejemplo: \`/ejecutar fastfetch\`\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `_Rango de borrado: 1 a 100 mensajes_`;
 

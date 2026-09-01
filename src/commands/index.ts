@@ -14,6 +14,11 @@ import { registerResumeCommand } from './resume.command.js';
 import { registerAskCommand } from './ask.command.js';
 import { registerWebCommand } from './web.command.js';
 import { registerPhoneCommand } from './phone.command.js';
+import { registerRecordatorioCommand } from './recordatorio.command.js';
+import { registerGastoCommand } from './gasto.command.js';
+import { registerGastosResumenCommand } from './gastosResumen.command.js';
+import { registerEstadoCommand } from './estado.command.js';
+import { registerEjecutarCommand } from './ejecutar.command.js';
 
 export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerStartCommand(bot);
@@ -30,4 +35,9 @@ export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerAskCommand(bot);
   registerPhoneCommand(bot);
   registerWebCommand(bot);
+  registerRecordatorioCommand(bot);
+  registerGastoCommand(bot);
+  registerGastosResumenCommand(bot);
+  registerEstadoCommand(bot);
+  registerEjecutarCommand(bot);
 }

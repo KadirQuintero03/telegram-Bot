@@ -20,6 +20,7 @@ export const config = {
   filesStoragePath: path.resolve(process.env['FILES_STORAGE_PATH'] ?? './filesBotTelegram'),
   registryStoragePath: path.resolve(process.env['REGISTRY_STORAGE_PATH'] ?? './data'),
   downloaderApiUrl: (process.env['DOWNLOADER_API'] ?? '').trim(),
+  adminId: (process.env['ADMIN_ID'] ?? '').trim(),
   emailHost: requireEnv('EMAIL_HOST'),
   emailPort: parseInt(process.env['EMAIL_PORT'] ?? '587', 10),
   emailUser: requireEnv('EMAIL_USER'),

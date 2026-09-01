@@ -1,47 +1,54 @@
-# 🤖 Bot de Telegram — TypeScript + Telegraf v4
+# 🚀 TeleDrive — Bot de Telegram (TypeScript + Telegraf v4)
 
-Bot de Telegram con consulta de clima, traducción y administración de grupos. 100% gratuito.
+Bot de Telegram multifunción: nube personal, descarga de videos, productividad y monitoreo del sistema.
 
 ## Características
 
-- 🌤 `/clima` — Clima en tiempo real vía Open-Meteo (sin API key)
-- 🌐 `/traducir` — Traducción automática al español vía MyMemory
-- 🗑 `/borrar` — Elimina mensajes en grupos (solo administradores)
-- 📋 `/start` y `/help` — Bienvenida y ayuda
+### Nube y descargas
+- ☁️ `/cloud` — Explora y recibe tus archivos guardados (imágenes, videos, audios, documentos) con opciones **Todos**, **Único** y **Rango**
+- 📥 `/get <enlace>` — Descarga videos de TikTok, Instagram o YouTube
+- 📤 Envío de imágenes/videos/audios/documentos para guardarlos
+
+### Productividad (Módulo 1)
+- ⏰ `/recordatorio <mensaje natural>` — Programa recordatorios en lenguaje natural (ej: `recuérdame revisar el correo mañana a las 8am`)
+- 💸 `/gasto <cantidad> <descripción>` — Registra gastos y los clasifica automáticamente con IA
+- 📊 `/gastos_resumen` — Resumen de gastos de los últimos 7 días + resumen semanal automático los domingos
+
+### Sistema (Módulo 2)
+- 🖥️ `/estado` — Métricas del sistema (CPU, RAM, disco), multiplataforma
+- ⚙️ `/ejecutar <comando>` — Ejecuta comandos de terminal (solo administrador, basado en `ADMIN_ID`)
+
+### Utilidades
+- 🌤 `/clima <ciudad>` — Clima en tiempo real
+- 🌐 `/tra <texto>` — Traducción al español
+- 💵 `/dolar [cantidad]` — Dólar a COP
+- 🎙 `/tran` — Transcripción de audios
+- 🤖 `/ask` — Preguntas a Gemini
+- 📱 `/phone`, 🌐 `/web` — Acceso web a tus archivos
+- 🗑 `/borrar` — Administración de grupos
 
 ## Requisitos
+- Node.js v18+
+- pnpm
 
-- Node.js v18 o superior
-- npm v8 o superior
+## Instalación y configuración
 
-## Instalación
+1. Copia `example.env` a `.env` y completa las variables:
+   ```env
+   BOT_TOKEN=tu_token_aqui
+   GEMINI_API_KEY=tu_api_key
+   ADMIN_ID=tu_telegram_id         # requerido para /ejecutar
+   DOWNLOADER_API=                  # opcional: servicio de descarga
+   EMAIL_HOST / EMAIL_USER / EMAIL_PASS  # para /email
+   ```
 
-```bash
-npm install
-```
+2. Instala y ejecuta:
+   ```bash
+   pnpm install
+   npm run dev        # desarrollo (tsx + nodemon)
+   npm run build      # compilar a dist/
+   npm start          # ejecutar compilado
+   ```
 
-## Configuración
-
-1. Copia el archivo de ejemplo: `cp .env.example .env`
-2. Edita `.env` y coloca tu token de Telegram
-
-```env
-BOT_TOKEN=tu_token_aqui
-NODE_ENV=development
-LOG_LEVEL=info
-MAX_DELETE_MESSAGES=100
-WEATHER_CACHE_TTL_MINUTES=10
-```
-
-## Ejecución
-
-```bash
-# Modo desarrollo (con recarga automática)
-npm run dev
-
-# Compilar para producción
-npm run build
-
-# Ejecutar compilado
-npm start
-```
+## Persistencia
+Los recordatorios y gastos se guardan en `data.json` (excluido del repositorio vía `.gitignore`).

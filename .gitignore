@@ -4,5 +4,6 @@ botmkdir.env
 *.log
 .DS_Store
 data/registry.json
+data.json
 .env
 example.env
