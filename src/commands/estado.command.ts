@@ -3,7 +3,7 @@ import os from 'os';
 import si from 'systeminformation';
 import { BotContext } from '../types/bot.types.js';
 import { commandTrigger } from '../utils/commandMatcher.js';
-import { deleteCommandMessage } from '../utils/telegramHelpers.js';
+import { deleteCommandMessage, safeReply } from '../utils/telegramHelpers.js';
 import { escapeMarkdown } from '../utils/formatters.js';
 
 export function registerEstadoCommand(bot: Telegraf<BotContext>): void {
@@ -19,7 +19,7 @@ export function registerEstadoCommand(bot: Telegraf<BotContext>): void {
       const load = os.loadavg();
       const cpuPercent = await getCpuUsage();
 
-      const fs = await si.fsSize();
+      const fs = await getDiskInfo();
       const isWindows = os.platform() === 'win32';
       const main = isWindows
         ? fs.find((d) => /^C:/.test(d.fs)) ?? fs[0]
@@ -35,20 +35,18 @@ export function registerEstadoCommand(bot: Telegraf<BotContext>): void {
 
       const message =
         `🖥️ *Estado del sistema*\n\n` +
-        `🧠 CPU \\- Uso: *${cpuPercent}%* \\(load 1m: ${load[0]?.toFixed(2) ?? '0'}\\)\n` +
-        `💾 RAM \\- *${(usedMem / 1024 ** 3).toFixed(1)}* GB / *${(totalMem / 1024 ** 3).toFixed(1)}* GB \\(*${memPercent}%*\\)\n` +
-        `📊 Disco \\- *${(totalDisk / 1024 ** 3).toFixed(1)}* GB total, *${(freeDisk / 1024 ** 3).toFixed(1)}* GB libres \\(*${diskPercent}%* usado\\)\n\n` +
+        `🧠 CPU \\- Uso: *${escapeMarkdown(cpuPercent)}%* \\(load 1m: ${escapeMarkdown((load[0] ?? 0).toFixed(2))}\\)\n` +
+        `💾 RAM \\- *${escapeMarkdown((usedMem / 1024 ** 3).toFixed(1))}* GB / *${escapeMarkdown((totalMem / 1024 ** 3).toFixed(1))}* GB \\(*${escapeMarkdown(memPercent)}%*\\)\n` +
+        `📊 Disco \\- *${escapeMarkdown((totalDisk / 1024 ** 3).toFixed(1))}* GB total, *${escapeMarkdown((freeDisk / 1024 ** 3).toFixed(1))}* GB libres \\(*${escapeMarkdown(diskPercent)}%* usado\\)\n\n` +
         `💻 Equipo: ${escapeMarkdown(hostname)}\n` +
         `🛡 SO: ${escapeMarkdown(platform)}\n` +
-        `⏱ Activo: *${uptimeHours}* horas`;
+        `⏱ Activo: *${escapeMarkdown(uptimeHours)}* horas`;
 
-      await ctx.reply(message, { parse_mode: 'MarkdownV2' });
+      await safeReply(ctx, message);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /estado: ${msg}`);
-      await ctx.reply(`❌ No pude obtener el estado del sistema\\.\n${escapeMarkdown(msg)}`, {
-        parse_mode: 'MarkdownV2',
-      });
+      await safeReply(ctx, `❌ No pude obtener el estado del sistema\\.\n${escapeMarkdown(msg)}`);
     } finally {
       await deleteCommandMessage(ctx);
     }
@@ -63,5 +61,14 @@ async function getCpuUsage(): Promise<string> {
   } catch {
     const avg = os.loadavg()[0] ?? 0;
     return (avg * 100).toFixed(1);
+  }
+}
+
+/** Devuelve la información de los discos, con respaldo al C: en Windows. */
+async function getDiskInfo(): Promise<{ fs: string; size: number; available: number; mount: string }[]> {
+  try {
+    return await si.fsSize();
+  } catch {
+    return [{ fs: '/', size: 0, available: 0, mount: '/' }];
   }
 }

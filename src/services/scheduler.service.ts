@@ -7,6 +7,7 @@ const REMINDER_POLL_MS = 30_000;
 
 class SchedulerService {
     private bot: Telegraf<BotContext> | null = null;
+    private remindersRunning = false;
 
     /** Asigna la instancia del bot para poder enviar mensajes automáticos. */
     setBot(bot: Telegraf<BotContext>): void {
@@ -17,7 +18,6 @@ class SchedulerService {
     start(): void {
         this.startReminderPoller();
         this.scheduleWeeklyGastosSummary();
-        this.schedulePendingRemindersReload();
         console.info('[Scheduler] Servicios de programación iniciados.');
     }
 
@@ -28,39 +28,40 @@ class SchedulerService {
         }, REMINDER_POLL_MS);
     }
 
-    /** Cron de respaldo que revisa recordatorios cada minuto. */
-    private schedulePendingRemindersReload(): void {
-        cron.schedule('*/1 * * * *', () => {
-            void this.checkReminders();
-        });
-    }
-
     /** Recorre recordatorios pendientes y envía los que coinciden con la hora actual. */
     private async checkReminders(): Promise<void> {
-        if (!this.bot) return;
-        const now = new Date();
-        const nowIso = this.toDateKey(now);
-        const nowMinutes = this.toMinutes(now);
+        if (!this.bot || this.remindersRunning) return;
+        this.remindersRunning = true;
+        try {
+            const now = new Date();
+            const nowIso = this.toDateKey(now);
+            const nowMinutes = this.toMinutes(now);
 
-        for (const reminder of dataStore.getRecordatorios()) {
-            if (reminder.fired) continue;
+            for (const reminder of dataStore.getRecordatorios()) {
+                if (reminder.fired) continue;
 
-            const reminderDateKey = `${reminder.date}`;
-            const reminderMinutes = this.toMinutesFromTime(reminder.time);
+                const reminderDateKey = `${reminder.date}`;
+                const reminderMinutes = this.toMinutesFromTime(reminder.time);
 
-            if (reminderDateKey === nowIso && reminderMinutes === nowMinutes) {
-                try {
-                    await this.bot.telegram.sendMessage(
-                        reminder.chatId,
-                        `⏰ *Recordatorio:*\n${reminder.task}`,
-                        { parse_mode: 'MarkdownV2' }
-                    );
-                } catch (err) {
-                    const msg = err instanceof Error ? err.message : 'Error desconocido';
-                    console.error(`[Scheduler] No se pudo enviar recordatorio ${reminder.id}: ${msg}`);
+                if (reminderDateKey === nowIso && reminderMinutes === nowMinutes) {
+                    try {
+                        await this.bot.telegram.sendMessage(
+                            reminder.chatId,
+                            `⏰ *Recordatorio:*\n${this.escape(reminder.task)}`,
+                            { parse_mode: 'MarkdownV2' }
+                        );
+                    } catch (err) {
+                        const msg = err instanceof Error ? err.message : 'Error desconocido';
+                        console.error(`[Scheduler] No se pudo enviar recordatorio ${reminder.id}: ${msg}`);
+                    }
+                    dataStore.markRecordatorioFired(reminder.id);
                 }
-                dataStore.markRecordatorioFired(reminder.id);
             }
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Error desconocido';
+            console.error(`[Scheduler] checkReminders falló: ${msg}`);
+        } finally {
+            this.remindersRunning = false;
         }
     }
 
@@ -74,39 +75,43 @@ class SchedulerService {
     /** Envía a cada usuario el balance de gastos de los últimos 7 días. */
     private async sendWeeklyGastosSummary(): Promise<void> {
         if (!this.bot) return;
+        try {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const gastos = dataStore.getGastos().filter((g) => {
+                const fecha = new Date(g.fecha);
+                return fecha >= sevenDaysAgo;
+            });
 
-        const gastos = dataStore.getGastos().filter((g) => {
-            const fecha = new Date(g.fecha);
-            return fecha >= sevenDaysAgo;
-        });
+            if (gastos.length === 0) return;
 
-        if (gastos.length === 0) return;
-
-        const byCategory = new Map<string, number>();
-        for (const gasto of gastos) {
-            byCategory.set(gasto.categoria, (byCategory.get(gasto.categoria) ?? 0) + gasto.monto);
-        }
-
-        const lines = [...byCategory.entries()].map(
-            ([categoria, total]) => `• *${this.escape(categoria)}*: $${total.toLocaleString('es-CO')}`
-        );
-
-        const total = gastos.reduce((sum, g) => sum + g.monto, 0);
-
-        for (const chatId of new Set(gastos.map((g) => g.chatId))) {
-            const message =
-                `📊 *Resumen semanal de gastos*\n\n` +
-                `${lines.join('\n')}\n\n` +
-                `TOTAL: *$${total.toLocaleString('es-CO')}*`;
-            try {
-                await this.bot.telegram.sendMessage(chatId, message, { parse_mode: 'MarkdownV2' });
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : 'Error desconocido';
-                console.error(`[Scheduler] No se pudo enviar resumen semanal a ${chatId}: ${msg}`);
+            const byCategory = new Map<string, number>();
+            for (const gasto of gastos) {
+                byCategory.set(gasto.categoria, (byCategory.get(gasto.categoria) ?? 0) + gasto.monto);
             }
+
+            const lines = [...byCategory.entries()].map(
+                ([categoria, total]) => `• *${this.escape(categoria)}*: $${this.escape(total.toLocaleString('es-CO'))}`
+            );
+
+            const total = gastos.reduce((sum, g) => sum + g.monto, 0);
+
+            for (const chatId of new Set(gastos.map((g) => g.chatId))) {
+                const message =
+                    `📊 *Resumen semanal de gastos*\n\n` +
+                    `${lines}\n\n` +
+                    `TOTAL: *$${this.escape(total.toLocaleString('es-CO'))}*`;
+                try {
+                    await this.bot.telegram.sendMessage(chatId, message, { parse_mode: 'MarkdownV2' });
+                } catch (err) {
+                    const msg = err instanceof Error ? err.message : 'Error desconocido';
+                    console.error(`[Scheduler] No se pudo enviar resumen semanal a ${chatId}: ${msg}`);
+                }
+            }
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Error desconocido';
+            console.error(`[Scheduler] sendWeeklyGastosSummary falló: ${msg}`);
         }
     }
 

@@ -4,7 +4,7 @@ import { BotContext } from '../types/bot.types.js';
 import { GeminiService } from '../services/gemini.service.js';
 import { dataStore, Gasto } from '../services/dataStore.service.js';
 import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
-import { deleteCommandMessage } from '../utils/telegramHelpers.js';
+import { deleteCommandMessage, safeReply } from '../utils/telegramHelpers.js';
 import { escapeMarkdown } from '../utils/formatters.js';
 
 const geminiService = new GeminiService();
@@ -52,19 +52,17 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
       dataStore.addGasto(gasto);
 
       const formattedMonto = monto.toLocaleString('es-CO');
-      await ctx.reply(
+      await safeReply(
+        ctx,
         `✅ *Gasto registrado*\n` +
-        `💰 Monto: *$${formattedMonto}*\n` +
+        `💰 Monto: *${escapeMarkdown(formattedMonto)}*\n` +
         `📝 Descripción: ${escapeMarkdown(descripcion)}\n` +
-        `🏷 Categoría: *${escapeMarkdown(categoria)}*`,
-        { parse_mode: 'MarkdownV2' }
+        `🏷 Categoría: *${escapeMarkdown(categoria)}*`
       );
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /gasto: ${msg}`);
-      await ctx.reply(`❌ No pude registrar el gasto\\.\n${escapeMarkdown(msg)}`, {
-        parse_mode: 'MarkdownV2',
-      });
+      await safeReply(ctx, `❌ No pude registrar el gasto\\.\n${escapeMarkdown(msg)}`);
     } finally {
       await deleteCommandMessage(ctx);
     }

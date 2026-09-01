@@ -18,13 +18,6 @@ async function main(): Promise<void> {
   const bot = createBot();
 
   try {
-    await bot.telegram.setMyName('TeleDrive');
-  } catch (err) {
-    console.error('[WARN] No se pudo establecer el nombre del bot (setMyName):', err);
-  }
-
-
-  try {
     await bot.telegram.setMyCommands([
       { command: 'start', description: 'Registrarte y ver bienvenida' },
       { command: 'help', description: 'Ver la guía completa de comandos' },

@@ -9,6 +9,16 @@
     "start": "node dist/index.js",
     "start:prod": "pm2 start dist/index.js --name telegram-bot"
   },
+  "nodemonConfig": {
+    "ext": "ts",
+    "ignore": [
+      "data.json",
+      "data/**",
+      "filesBotTelegram/**",
+      "dist/**",
+      ".git"
+    ]
+  },
   "keywords": [
     "telegram",
     "bot",
