@@ -39,7 +39,7 @@ function buildPageKeyboard(hasNext: boolean) {
     const rows = [
         [
             Markup.button.callback('📦 Todos', 'cloud:all'),
-            Markup.button.callback('🎯 Específico', 'cloud:specific'),
+            Markup.button.callback('🆚 Rango', 'cloud:specific'),
             Markup.button.callback('1️⃣ Único', 'cloud:unique'),
         ],
     ];
@@ -68,7 +68,7 @@ function buildPageMessage(
         `📋 Mostrando archivos *${offset + 1}* a *${offset + page.length}*:\n${listText}\n\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `📦 *Todos* — envía estos ${page.length} archivos al chat\\.\n` +
-        `🎯 *Específico* — indica un rango \\(ej\\. 2\\-5\\) para enviar\\.\n` +
+        `🆚 *Rango* — indica un rango \\(ej\\. 2\\-5\\) para enviar\\.\n` +
         `1️⃣ *Único* — indica un solo número para enviar ese archivo\\.\n` +
         `➡️ *Siguiente* — muestra los próximos archivos\\.`
     );
@@ -199,7 +199,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
 
         cloudSessionService.updateSession(userId, { step: 'awaiting_specific_range' });
         await ctx.reply(
-            '🎯 Escribe el rango de archivos que deseas recibir\\.\n' +
+            '🆚 Escribe el rango de archivos que deseas recibir\\.\n' +
             'Usa el formato `N-M`, por ejemplo: `2-5`\\.',
             { parse_mode: 'MarkdownV2' }
         );

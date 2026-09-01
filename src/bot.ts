@@ -5,6 +5,7 @@ import { loggerMiddleware } from './middlewares/logger.middleware.js';
 import { registerAllCommands } from './commands/index.js';
 import { registerMediaHandlers } from './handlers/media.handler.js';
 import { registerEmailFlowHandler } from './handlers/emailFlow.handler.js';
+import { registerCloudFlowHandler } from './handlers/cloudFlow.handler.js';
 
 export function createBot(): Telegraf<BotContext> {
   const bot = new Telegraf<BotContext>(config.botToken);
@@ -13,6 +14,7 @@ export function createBot(): Telegraf<BotContext> {
 
   registerAllCommands(bot);
   registerEmailFlowHandler(bot);
+  registerCloudFlowHandler(bot);
   registerMediaHandlers(bot);
 
   bot.catch((err, ctx) => {
