@@ -26,7 +26,7 @@ export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerDolarCommand(bot);
   // registerTranCommand(bot);
   // registerResumeCommand(bot);
-  // registerAskCommand(bot);
+  registerAskCommand(bot);
   // registerPhoneCommand(bot);
   registerRecordatorioCommand(bot);
   registerGastoCommand(bot);
