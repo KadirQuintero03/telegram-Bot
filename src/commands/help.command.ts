@@ -29,22 +29,14 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `*/ask \\<pregunta\\>*\n` +
       `Hazle una pregunta a la IA de Gemini y recibe una respuesta breve\\.\n` +
       `Ejemplo: \`/ask Cómo hacer un asado?\`\n\n` +
-      `*/borrar \\<N\\>*\n` +
-      `Elimina los últimos N mensajes del grupo\\.\n` +
-      `Solo disponible para administradores en grupos\\.\n` +
-      `Ejemplo: \`/borrar 10\`\n\n` +
       `*/get \\<enlace\\>*\n` +
       `Descarga un video de TikTok, Instagram o YouTube y lo guarda en tu carpeta personal\\.\n` +
       `Ejemplo: \`/get https://vm.tiktok.com/XXXXXXX\`\n\n` +
       `*/cloud*\n` +
       `Muestra un menú para explorar tus archivos guardados \\(imágenes, videos, audios o documentos\\)\\.\n` +
       `Permite ver cuántos archivos tienes, su peso total, y recibirlos de nuevo en el chat\\.\n\n` +
-      `*/email*\n` +
-      `Inicia el flujo para enviar un archivo por correo\\.\n\n` +
       `*/phone*\n` +
       `Vincula tu número de teléfono con tu cuenta de Telegram\\.\n\n` +
-      `*/web*\n` +
-      `Envía el enlace para iniciar sesión en GlowPic \\(requiere haber vinculado tu teléfono con /phone\\)\\.\n\n` +
       `*/recordatorio \\<mensaje natural\\>*\n` +
       `Programa un recordatorio en lenguaje natural \\(ej: \`/recordatorio revisar el correo mañana a las 8am\`\\)\\.\n\n` +
       `*/gasto \\<cantidad\\> \\<descripción\\>*\n` +
@@ -54,10 +46,6 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `Muestra el resumen de tus gastos de los últimos 7 días\\.\n\n` +
       `*/estado*\n` +
       `Muestra métricas del sistema \\(CPU, RAM, disco\\)\\.\n\n` +
-      `*/ejecutar \\<comando\\>*\n` +
-      `Ejecuta un comando de terminal \\(solo administrador\\)\\.\n` +
-      `Ejemplo: \`/ejecutar fastfetch\`\n` +
-      `━━━━━━━━━━━━━━━━━━━━\n` +
       `_Rango de borrado: 1 a 100 mensajes_`;
 
     await ctx.reply(message, { parse_mode: 'MarkdownV2' });
