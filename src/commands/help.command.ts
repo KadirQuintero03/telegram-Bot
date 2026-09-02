@@ -32,7 +32,7 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       // `*/borrar \\<N\\>*\n` +
       // `Elimina los últimos N mensajes del grupo\\.\n` +
       // `Solo disponible para administradores en grupos\\.\n` +
-      `Ejemplo: \`/borrar 10\`\n\n` +
+      // `Ejemplo: \`/borrar 10\`\n\n` +
       `*/get \\<enlace\\>*\n` +
       `Descarga un video de TikTok, Instagram o YouTube y lo guarda en tu carpeta personal\\.\n` +
       `Ejemplo: \`/get https://vm.tiktok.com/XXXXXXX\`\n\n` +
