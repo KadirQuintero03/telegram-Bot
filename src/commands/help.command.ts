@@ -10,9 +10,9 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `*/start*\n` +
       `Verifica que el bot esté activo y muestra bienvenida\\.\n\n` +
-      `*/clima \\<ciudad\\>*\n` +
-      `Consulta el clima actual de una ciudad\\.\n` +
-      `Ejemplo: \`/clima Bogotá\`\n\n` +
+      // `*/clima \\<ciudad\\>*\n` +
+      // `Consulta el clima actual de una ciudad\\.\n` +
+      // `Ejemplo: \`/clima Bogotá\`\n\n` +
       `*/tra \\<texto\\>*\n` +
       `Traduce cualquier texto al español latinoamericano\\.\n` +
       `Detecta el idioma automáticamente\\.\n` +
@@ -22,21 +22,29 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `Sin argumentos: muestra el valor del dólar hoy en pesos colombianos\\.\n` +
       `Con un número: convierte esos dólares a pesos colombianos\\.\n` +
       `Ejemplos: \`/dolar\` y \`/dolar 20\`\n\n` +
-      `*/tran*\n` +
-      `Responde a una nota de voz o audio con \`/tran\`y el bot transcribe lo que dice\\.\n\n` +
-      `*/resume*\n` +
-      `Responde a un texto, audio o imagen con \`/resume\`y el bot te da un resumen breve del contenido\\.\n\n` +
+      // `*/tran*\n` +
+      // `Responde a una nota de voz o audio con \`/tran\`y el bot transcribe lo que dice\\.\n\n` +
+      // `*/resume*\n` +
+      // `Responde a un texto, audio o imagen con \`/resume\`y el bot te da un resumen breve del contenido\\.\n\n` +
       `*/ask \\<pregunta\\>*\n` +
       `Hazle una pregunta a la IA de Gemini y recibe una respuesta breve\\.\n` +
       `Ejemplo: \`/ask Cómo hacer un asado?\`\n\n` +
+      // `*/borrar \\<N\\>*\n` +
+      // `Elimina los últimos N mensajes del grupo\\.\n` +
+      // `Solo disponible para administradores en grupos\\.\n` +
+      `Ejemplo: \`/borrar 10\`\n\n` +
       `*/get \\<enlace\\>*\n` +
       `Descarga un video de TikTok, Instagram o YouTube y lo guarda en tu carpeta personal\\.\n` +
       `Ejemplo: \`/get https://vm.tiktok.com/XXXXXXX\`\n\n` +
       `*/cloud*\n` +
       `Muestra un menú para explorar tus archivos guardados \\(imágenes, videos, audios o documentos\\)\\.\n` +
       `Permite ver cuántos archivos tienes, su peso total, y recibirlos de nuevo en el chat\\.\n\n` +
-      `*/phone*\n` +
-      `Vincula tu número de teléfono con tu cuenta de Telegram\\.\n\n` +
+      // `*/email*\n` +
+      // `Inicia el flujo para enviar un archivo por correo\\.\n\n` +
+      // `*/phone*\n` +
+      // `Vincula tu número de teléfono con tu cuenta de Telegram\\.\n\n` +
+      `*/web*\n` +
+      `Envía el enlace para iniciar sesión en GlowPic \\(requiere haber vinculado tu teléfono con /phone\\)\\.\n\n` +
       `*/recordatorio \\<mensaje natural\\>*\n` +
       `Programa un recordatorio en lenguaje natural \\(ej: \`/recordatorio revisar el correo mañana a las 8am\`\\)\\.\n\n` +
       `*/gasto \\<cantidad\\> \\<descripción\\>*\n` +
@@ -46,6 +54,10 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `Muestra el resumen de tus gastos de los últimos 7 días\\.\n\n` +
       `*/estado*\n` +
       `Muestra métricas del sistema \\(CPU, RAM, disco\\)\\.\n\n` +
+      // `*/ejecutar \\<comando\\>*\n` +
+      // `Ejecuta un comando de terminal \\(solo administrador\\)\\.\n` +
+      // `Ejemplo: \`/ejecutar fastfetch\`\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
       `_Rango de borrado: 1 a 100 mensajes_`;
 
     await ctx.reply(message, { parse_mode: 'MarkdownV2' });

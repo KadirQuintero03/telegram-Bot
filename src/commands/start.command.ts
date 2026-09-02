@@ -24,20 +24,20 @@ export function registerStartCommand(bot: Telegraf<BotContext>): void {
     await ctx.reply(
       intro + '\n\n' +
       `Estos son mis comandos disponibles:\n\n` +
-      `/clima \\<ciudad\\> — Clima en tiempo real\n` +
+      // `/clima \\<ciudad\\> — Clima en tiempo real\n` +
       `/tra \\<texto\\> — Traducción al español \\(también respondiendo mensajes\\)\n` +
       `/dolar \\[cantidad\\] — Precio o conversión del dólar a COP\n` +
-      `/tran — Transcribe audios \\(respondiendo a una nota de voz\\)\n` +
-      `/resume — Resume texto, audio o imágenes\n` +
+      // `/tran — Transcribe audios \\(respondiendo a una nota de voz\\)\n` +
+      // `/resume — Resume texto, audio o imágenes\n` +
       `/ask \\<pregunta\\> — Pregúntale algo a la IA\n` +
-      `/phone — Vincula tu teléfono\n` +
-      `/web — Obtén tu enlace de acceso a GlowPic\n` +
-      `/borrar \\<N\\> — Eliminar mensajes en grupos\n` +
+      // `/phone — Vincula tu teléfono\n` +
+      // `/web — Obtén tu enlace de acceso a GlowPic\n` +
+      // `/borrar \\<N\\> — Eliminar mensajes en grupos\n` +
       `/recordatorio \\<frase\\> — Programa recordatorios en lenguaje natural\n` +
       `/gasto \\<monto\\> \\<desc\\> — Registra un gasto\n` +
       `/gastos_resumen — Resumen de gastos de la semana\n` +
       `/estado — Métricas del sistema\n` +
-      `/ejecutar \\<cmd\\> — Comando de terminal \\(admin\\)\n` +
+      // `/ejecutar \\<cmd\\> — Comando de terminal \\(admin\\)\n` +
       `/help — Ver ayuda completa\n\n` +
       `_También puedes enviarme imágenes, videos, audios y documentos para guardarlos\\._`,
       { parse_mode: 'MarkdownV2' }
