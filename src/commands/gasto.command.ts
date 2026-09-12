@@ -6,6 +6,7 @@ import { dataStore, Gasto } from '../services/dataStore.service.js';
 import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
 import { deleteCommandMessage, safeReply } from '../utils/telegramHelpers.js';
 import { escapeMarkdown } from '../utils/formatters.js';
+import { escapeCop } from '../utils/gastos.js';
 
 const geminiService = new GeminiService();
 
@@ -20,7 +21,7 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
     const chatId = ctx.chat?.id;
 
     if (!args) {
-      await ctx.reply('Debes indicar cantidad y descripción. Ejemplo: `/gasto 15000 almuerzo`', {
+      await ctx.reply('Debes indicar cantidad y descripción. Ejemplo: `/gasto 15000 almuerzo` (en pesos colombianos)', {
         parse_mode: 'Markdown',
       });
       await deleteCommandMessage(ctx);
@@ -29,7 +30,7 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
 
     const { monto, descripcion } = parseGasto(args);
     if (monto === null || !descripcion) {
-      await ctx.reply('Formato inválido. Ejemplo: `/gasto 15000 almuerzo`', {
+      await ctx.reply('Formato inválido. Ejemplo: `/gasto 15000 almuerzo` (en pesos colombianos)', {
         parse_mode: 'Markdown',
       });
       await deleteCommandMessage(ctx);
@@ -51,11 +52,10 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
 
       dataStore.addGasto(gasto);
 
-      const formattedMonto = monto.toLocaleString('es-CO');
       await safeReply(
         ctx,
-        `*Gasto registrado*\n` +
-        `Monto: *${escapeMarkdown(formattedMonto)}*\n` +
+        `*Gasto registrado en pesos colombianos \\(COP\\)*\n` +
+        `Monto: *$${escapeCop(monto)} COP*\n` +
         `Descripción: ${escapeMarkdown(descripcion)}\n` +
         `Categoría: *${escapeMarkdown(categoria)}*`
       );
@@ -69,12 +69,13 @@ export function registerGastoCommand(bot: Telegraf<BotContext>): void {
   });
 }
 
-/** Extrae el monto numérico y la descripción de los argumentos del comando /gasto. */
+/** Extrae el monto numérico y la descripción de los argumentos del comando /gasto (COP). */
 function parseGasto(args: string): { monto: number | null; descripcion: string } {
-  const match = args.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/);
+  const match = args.match(/^([\d.,]+)\s+(.+)$/);
   if (!match) return { monto: null, descripcion: ''};
 
-  const monto = parseFloat(match[1]!.replace(',', '.'));
+  // Formato COP: el punto separa miles (12.500) y la coma los decimales (12.500,50).
+  const monto = parseFloat(match[1]!.replace(/\./g, '').replace(',', '.'));
   if (Number.isNaN(monto) || monto <= 0) return { monto: null, descripcion: ''};
 
   return { monto, descripcion: match[2]!.trim() };

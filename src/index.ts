@@ -29,8 +29,9 @@ async function main(): Promise<void> {
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
       // { command: 'phone', description: 'Vincular tu teléfono' },
       { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
-      { command: 'gasto', description: 'Registrar un gasto' },
-      { command: 'gastos_resumen', description: 'Ver resumen de gastos de los últimos 7 días' },
+      { command: 'gasto', description: 'Registrar un gasto en pesos colombianos' },
+      { command: 'gastos_resumen', description: 'Resumen de gastos del mes en curso' },
+      { command: 'gasto_resumen', description: 'Resumen de gastos del mes en curso' },
       { command: 'estado', description: 'Ver métricas del sistema' }
     ]);
   } catch (err) {

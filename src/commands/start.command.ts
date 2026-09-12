@@ -34,8 +34,8 @@ export function registerStartCommand(bot: Telegraf<BotContext>): void {
       // `/web — Obtén tu enlace de acceso a GlowPic\n` +
       // `/borrar \\<N\\> — Eliminar mensajes en grupos\n` +
       `/recordatorio \\<frase\\> — Programa recordatorios en lenguaje natural\n` +
-      `/gasto \\<monto\\> \\<desc\\> — Registra un gasto\n` +
-      `/gastos_resumen — Resumen de gastos de la semana\n` +
+      `/gasto \\<monto\\> \\<desc\\> — Registra un gasto en pesos colombianos\n` +
+      `/gastos_resumen — Resumen de gastos del mes en curso\n` +
       `/estado — Métricas del sistema\n` +
       // `/ejecutar \\<cmd\\> — Comando de terminal \\(admin\\)\n` +
       `/help — Ver ayuda completa\n\n` +

@@ -48,10 +48,11 @@ export function registerHelpCommand(bot: Telegraf<BotContext>): void {
       `*/recordatorio \\<mensaje natural\\>*\n` +
       `Programa un recordatorio en lenguaje natural \\(ej: \`/recordatorio revisar el correo mañana a las 8am\`\\)\\.\n\n` +
       `*/gasto \\<cantidad\\> \\<descripción\\>*\n` +
-      `Registra un gasto y lo clasifica automáticamente en una categoría\\.\n` +
+      `Registra un gasto en *pesos colombianos \\(COP\\)* y lo clasifica automáticamente en una categoría\\.\n` +
       `Ejemplo: \`/gasto 15000 almuerzo\`\n\n` +
-      `*/gastos_resumen*\n` +
-      `Muestra el resumen de tus gastos de los últimos 7 días\\.\n\n` +
+      `*/gastos_resumen* \\(o */gasto_resumen*\\)\n` +
+      `Muestra el resumen de tus gastos de *lo que va del mes en curso*\\.\n` +
+      `Además recibirás resúmenes automáticos: al final de cada semana del mes, cada día 1 del mes y cada 1 de enero\\.\n\n` +
       `*/estado*\n` +
       `Muestra métricas del sistema \\(CPU, RAM, disco\\)\\.\n\n` +
       // `*/ejecutar \\<comando\\>*\n` +
