@@ -37,13 +37,10 @@ export function registerEstadoCommand(bot: Telegraf<BotContext>): void {
       const uptimeHours = (os.uptime() / 3600).toFixed(1);
 
       const sistema =
-        `*Estado del sistema*\n\n` +
+        `*Rendimiento actual*\n\n` +
         `CPU \\- Uso: *${escapeMarkdown(cpuPercent)}%* \\(load 1m: ${escapeMarkdown((load[0] ?? 0).toFixed(2))}\\)\n` +
         `RAM \\- *${escapeMarkdown((usedMem / 1024 ** 3).toFixed(1))}* GB / *${escapeMarkdown((totalMem / 1024 ** 3).toFixed(1))}* GB \\(*${escapeMarkdown(memPercent)}%*\\)\n` +
-        `Disco \\- *${escapeMarkdown((totalDisk / 1024 ** 3).toFixed(1))}* GB total, *${escapeMarkdown((freeDisk / 1024 ** 3).toFixed(1))}* GB libres \\(*${escapeMarkdown(diskPercent)}%* usado\\)\n\n` +
-        `Equipo: ${escapeMarkdown(hostname)}\n` +
-        `SO: ${escapeMarkdown(platform)}\n` +
-        `Activo: *${escapeMarkdown(uptimeHours)}* horas`;
+        `Disco \\(${escapeMarkdown(String(main?.fs ?? '\\/'))}\\) \\- *${escapeMarkdown((totalDisk / 1024 ** 3).toFixed(1))}* GB total, *${escapeMarkdown((freeDisk / 1024 ** 3).toFixed(1))}* GB libres \\(*${escapeMarkdown(diskPercent)}%* usado\\)`;
 
       await ctx.sendChatAction('typing');
       const hardware = await buildHardwareReport();

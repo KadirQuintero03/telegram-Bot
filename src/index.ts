@@ -30,7 +30,6 @@ async function main(): Promise<void> {
       // { command: 'phone', description: 'Vincular tu teléfono' },
       { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
       { command: 'gasto', description: 'Registrar un gasto en pesos colombianos' },
-      { command: 'gastos_resumen', description: 'Resumen de gastos del mes en curso' },
       { command: 'gasto_resumen', description: 'Resumen de gastos del mes en curso' },
       { command: 'estado', description: 'Ver métricas del sistema' }
     ]);

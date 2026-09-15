@@ -42,6 +42,5 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
     );
   };
 
-  bot.hears(commandTrigger('gastos_resumen'), handler);
   bot.hears(commandTrigger('gasto_resumen'), handler);
 }

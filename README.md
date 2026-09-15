@@ -12,7 +12,7 @@ Bot de Telegram multifunción: nube personal, descarga de videos, productividad 
 ### Productividad (Módulo 1)
 -  `/recordatorio <mensaje natural>` — Programa recordatorios en lenguaje natural (ej: `recuérdame revisar el correo mañana a las 8am`)
 -  `/gasto <cantidad> <descripción>` — Registra gastos y los clasifica automáticamente con IA
--  `/gastos_resumen` — Resumen de gastos de los últimos 7 días + resumen semanal automático los domingos
+-  `/gasto_resumen` — Resumen de gastos del mes en curso + resúmenes automáticos semanales, mensuales y anuales
 
 ### Sistema (Módulo 2)
 -  `/estado` — Métricas del sistema (CPU, RAM, disco), multiplataforma
