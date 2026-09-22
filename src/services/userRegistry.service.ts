@@ -32,6 +32,11 @@ export class UserRegistryService {
     }
 
 
+    getUsername(telegramId: number): string | null {
+        return this.registry.users[telegramId]?.username ?? null;
+    }
+
+
     getFolderByTelegramId(telegramId: number): string | null {
         const record = this.registry.users[telegramId];
         if (!record) return null;

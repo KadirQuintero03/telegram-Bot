@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { userRegistry } from './userRegistry.service.js';
 
 const DATA_FILE = path.resolve(process.cwd(), 'data.json');
 
@@ -16,6 +17,7 @@ export interface Reminder {
 export interface Gasto {
     id: string;
     chatId: number;
+    usuario: string;
     monto: number;
     descripcion: string;
     categoria: string;
@@ -45,16 +47,32 @@ class DataStoreService {
             if (fs.existsSync(DATA_FILE)) {
                 const raw = fs.readFileSync(DATA_FILE, 'utf-8');
                 const parsed = JSON.parse(raw) as DataSchema;
-                return {
+                let changed = false;
+                const gastos = (parsed.gastos ?? []).map((gasto) => {
+                    if (typeof gasto.usuario === 'string' && gasto.usuario.length > 0) return gasto;
+                    changed = true;
+                    return { ...gasto, usuario: this.resolveUsuario(gasto.chatId) };
+                });
+                const data = {
                     recordatorios: parsed.recordatorios ?? [],
-                    gastos: parsed.gastos ?? [],
+                    gastos,
                 };
+                if (changed) {
+                    this.data = data;
+                    this.save();
+                }
+                return data;
             }
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Error desconocido';
             console.error(`[DataStore] No se pudo leer data.json: ${msg}`);
         }
         return structuredClone(EMPTY_DATA);
+    }
+
+    /** Devuelve el nombre de usuario registrado asociado al telegramId, o un valor por defecto. */
+    private resolveUsuario(telegramId: number): string {
+        return userRegistry.getUsername(telegramId) ?? 'Desconocido';
     }
 
     /** Persiste el estado actual en data.json. */
