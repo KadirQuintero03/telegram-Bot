@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { userRegistry } from './user-registry.service.js';
+import { FinanzaTransaction, UserFinanceProfile } from '../types/finanzas.types.js';
+import { normalizeDateDDMMAAAA } from '../utils/finanzas.js';
 
 const DATA_FILE = path.resolve(process.cwd(), 'data.json');
 
@@ -14,24 +16,16 @@ export interface Reminder {
   fired: boolean;
 }
 
-export interface Gasto {
-  id: string;
-  chatId: number;
-  usuario: string;
-  monto: number;
-  descripcion: string;
-  categoria: string;
-  fecha: string;
-}
-
 export interface DataSchema {
   recordatorios: Reminder[];
-  gastos: Gasto[];
+  finanzas: FinanzaTransaction[];
+  profiles: Record<number, UserFinanceProfile>;
 }
 
 const EMPTY_DATA: DataSchema = {
   recordatorios: [],
-  gastos: [],
+  finanzas: [],
+  profiles: {},
 };
 
 class DataStoreService {
@@ -45,21 +39,71 @@ class DataStoreService {
     try {
       if (fs.existsSync(DATA_FILE)) {
         const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-        const parsed = JSON.parse(raw) as DataSchema;
+        const parsed = JSON.parse(raw) as Partial<DataSchema> & { gastos?: any[] };
+
+        let finanzas: FinanzaTransaction[] = parsed.finanzas ?? [];
+        let profiles: Record<number, UserFinanceProfile> = parsed.profiles ?? {};
         let changed = false;
-        const gastos = (parsed.gastos ?? []).map((gasto) => {
-          if (typeof gasto.usuario === 'string' && gasto.usuario.length > 0) return gasto;
+
+        // Migración de datos legacy (gastos -> finanzas)
+        if (Array.isArray(parsed.gastos) && parsed.gastos.length > 0) {
+          for (const oldGasto of parsed.gastos) {
+            const telegramId = oldGasto.chatId ?? 0;
+            const usuario = oldGasto.usuario || userRegistry.getUsername(telegramId) || 'Desconocido';
+            const fechaNorm = normalizeDateDDMMAAAA(oldGasto.fecha);
+
+            const tx: FinanzaTransaction = {
+              id: oldGasto.id || String(Date.now()),
+              telegramId,
+              chatId: oldGasto.chatId ?? 0,
+              usuario,
+              tipo: 'gasto',
+              monto: Number(oldGasto.monto) || 0,
+              categoria: oldGasto.categoria || 'Otros',
+              descripcion: oldGasto.descripcion || 'Gasto registrado',
+              fecha: fechaNorm,
+              createdAt: oldGasto.fecha || new Date().toISOString(),
+            };
+            finanzas.push(tx);
+          }
           changed = true;
-          return { ...gasto, usuario: this.resolveUsuario(gasto.chatId) };
-        });
-        const data = {
+        }
+
+        // Recalcular perfiles si faltan
+        for (const tx of finanzas) {
+          if (!profiles[tx.telegramId]) {
+            profiles[tx.telegramId] = {
+              telegramId: tx.telegramId,
+              usuario: tx.usuario,
+              balance: 0,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+        }
+
+        // Recalcular balances
+        for (const pid of Object.keys(profiles)) {
+          const id = Number(pid);
+          const userTx = finanzas.filter((t) => t.telegramId === id);
+          let bal = 0;
+          for (const t of userTx) {
+            if (t.tipo === 'ingreso') bal += t.monto;
+            if (t.tipo === 'gasto') bal -= t.monto;
+          }
+          profiles[id]!.balance = bal;
+        }
+
+        const data: DataSchema = {
           recordatorios: parsed.recordatorios ?? [],
-          gastos,
+          finanzas,
+          profiles,
         };
+
         if (changed) {
           this.data = data;
           this.save();
         }
+
         return data;
       }
     } catch (err) {
@@ -67,10 +111,6 @@ class DataStoreService {
       console.error(`[DataStore] No se pudo leer data.json: ${msg}`);
     }
     return structuredClone(EMPTY_DATA);
-  }
-
-  private resolveUsuario(telegramId: number): string {
-    return userRegistry.getUsername(telegramId) ?? 'Desconocido';
   }
 
   private save(): void {
@@ -99,13 +139,41 @@ class DataStoreService {
     }
   }
 
-  getGastos(): Gasto[] {
-    return this.data.gastos;
+  getProfile(telegramId: number, usuario: string): UserFinanceProfile {
+    let profile = this.data.profiles[telegramId];
+    if (!profile) {
+      profile = {
+        telegramId,
+        usuario,
+        balance: 0,
+        updatedAt: new Date().toISOString(),
+      };
+      this.data.profiles[telegramId] = profile;
+      this.save();
+    } else if (usuario && profile.usuario !== usuario) {
+      profile.usuario = usuario;
+      this.save();
+    }
+    return profile;
   }
 
-  addGasto(gasto: Gasto): void {
-    this.data.gastos.push(gasto);
+  addTransaction(tx: FinanzaTransaction): UserFinanceProfile {
+    this.data.finanzas.push(tx);
+
+    const profile = this.getProfile(tx.telegramId, tx.usuario);
+    if (tx.tipo === 'ingreso') {
+      profile.balance += tx.monto;
+    } else if (tx.tipo === 'gasto') {
+      profile.balance -= tx.monto;
+    }
+    profile.updatedAt = new Date().toISOString();
+
     this.save();
+    return profile;
+  }
+
+  getUserTransactions(telegramId: number): FinanzaTransaction[] {
+    return this.data.finanzas.filter((tx) => tx.telegramId === telegramId);
   }
 }
 

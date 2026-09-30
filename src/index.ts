@@ -26,8 +26,8 @@ async function main(): Promise<void> {
       { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
       { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
-      { command: 'gasto', description: 'Registrar un gasto en pesos colombianos' },
-      { command: 'gasto_resumen', description: 'Resumen de gastos del mes en curso' },
+      { command: 'finanza', description: 'Registrar ingreso o gasto (texto o voz)' },
+      { command: 'resumen_finanza', description: 'Resúmenes semanales, mensuales, anuales o por categoría' },
       { command: 'estado', description: 'Ver métricas del sistema' }
     ]);
   } catch (err) {

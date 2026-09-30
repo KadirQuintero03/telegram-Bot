@@ -6,6 +6,7 @@ import { registerAllCommands } from './commands/index.js';
 import { registerMediaHandlers } from './handlers/media.handler.js';
 import { registerEmailFlowHandler } from './handlers/email-flow.handler.js';
 import { registerCloudFlowHandler } from './handlers/cloud-flow.handler.js';
+import { registerFinanzaFlowHandler } from './handlers/finanza-flow.handler.js';
 import { schedulerService } from './services/scheduler.service.js';
 import { MESSAGES } from './constants/messages.js';
 
@@ -17,6 +18,7 @@ export function createBot(): Telegraf<BotContext> {
   registerAllCommands(bot);
   registerEmailFlowHandler(bot);
   registerCloudFlowHandler(bot);
+  registerFinanzaFlowHandler(bot);
   registerMediaHandlers(bot);
 
   schedulerService.setBot(bot);

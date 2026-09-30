@@ -9,8 +9,8 @@ import { registerDolarCommand } from './dolar.command.js';
 import { registerAskCommand } from './ask.command.js';
 import { registerIaCommand } from './ia.command.js';
 import { registerRecordatorioCommand } from './recordatorio.command.js';
-import { registerGastoCommand } from './gasto.command.js';
-import { registerGastosResumenCommand } from './gastos-resumen.command.js';
+import { registerFinanzaCommand } from './finanza.command.js';
+import { registerResumenFinanzaCommand } from './resumen-finanza.command.js';
 import { registerEstadoCommand } from './estado.command.js';
 
 export function registerAllCommands(bot: Telegraf<BotContext>): void {
@@ -23,7 +23,7 @@ export function registerAllCommands(bot: Telegraf<BotContext>): void {
   registerAskCommand(bot);
   registerIaCommand(bot);
   registerRecordatorioCommand(bot);
-  registerGastoCommand(bot);
-  registerGastosResumenCommand(bot);
+  registerFinanzaCommand(bot);
+  registerResumenFinanzaCommand(bot);
   registerEstadoCommand(bot);
 }
