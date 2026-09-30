@@ -26,6 +26,12 @@ export function escapeCop(amount: number): string {
   return escapeMarkdown(formatCopAmount(amount));
 }
 
+/** Convierte una fecha dada al formato DD/MM/AAAA. */
+export function formatDateDDMMAAAA(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
 /** Convierte una fecha dada (o de hoy) al formato estándar estricto DD/MM/AAAA. */
 export function normalizeDateDDMMAAAA(rawDate?: string): string {
   const now = new Date();
@@ -68,9 +74,42 @@ export function parseDDMMAAAA(dateStr: string): Date {
     const day = parseInt(parts[0]!, 10);
     const month = parseInt(parts[1]!, 10) - 1;
     const year = parseInt(parts[2]!, 10);
-    return new Date(year, month, day);
+    return new Date(year, month, day, 0, 0, 0, 0);
   }
   return new Date();
+}
+
+/** Obtiene el rango de fechas [inicio (Lunes 00:00:00), fin (Domingo 23:59:59)] de la semana. */
+export function getWeekDateRange(refDate: Date = new Date()): { inicio: Date; fin: Date } {
+  const now = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+  const currentDayOfWeek = now.getDay(); // 0 (Sun) .. 6 (Sat)
+  const distanceToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+  const inicio = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday, 0, 0, 0, 0);
+  const fin = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + 6, 23, 59, 59, 999);
+
+  return { inicio, fin };
+}
+
+/** Obtiene el rango de fechas del mes actual (1 al último día del mes). */
+export function getMonthDateRange(refDate: Date = new Date()): { inicio: Date; fin: Date } {
+  const year = refDate.getFullYear();
+  const month = refDate.getMonth();
+
+  const inicio = new Date(year, month, 1, 0, 0, 0, 0);
+  const fin = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+  return { inicio, fin };
+}
+
+/** Obtiene el rango de fechas del año actual (1 de enero al 31 de diciembre). */
+export function getAnnualDateRange(refDate: Date = new Date()): { inicio: Date; fin: Date } {
+  const year = refDate.getFullYear();
+
+  const inicio = new Date(year, 0, 1, 0, 0, 0, 0);
+  const fin = new Date(year, 11, 31, 23, 59, 59, 999);
+
+  return { inicio, fin };
 }
 
 /** Calcula totales de una lista de transacciones. */
@@ -91,6 +130,36 @@ export function calculateTotals(transactions: FinanzaTransaction[]) {
     totalGastos,
     balancePeriodo: totalIngresos - totalGastos,
   };
+}
+
+/** Identifica la categoría con más gastos en un conjunto de transacciones. */
+export function getTopExpenseCategory(
+  transactions: FinanzaTransaction[]
+): { category: string; total: number } | null {
+  const gastosMap = new Map<string, number>();
+
+  for (const tx of transactions) {
+    if (tx.tipo === 'gasto') {
+      const current = gastosMap.get(tx.categoria) ?? 0;
+      gastosMap.set(tx.categoria, current + tx.monto);
+    }
+  }
+
+  if (gastosMap.size === 0) {
+    return null;
+  }
+
+  let topCategory = '';
+  let maxTotal = -1;
+
+  for (const [cat, total] of gastosMap.entries()) {
+    if (total > maxTotal) {
+      maxTotal = total;
+      topCategory = cat;
+    }
+  }
+
+  return { category: topCategory, total: maxTotal };
 }
 
 /** Filtra transacciones por rango de fechas [inicio, fin]. */
@@ -122,33 +191,45 @@ export function groupByCategory(transactions: FinanzaTransaction[]): Map<string,
   return map;
 }
 
-/** Construye el informe de resumen semanal. */
+/** Construye el informe de resumen semanal (Lunes a Domingo). */
 export function buildWeeklyReport(
   usuario: string,
   profile: UserFinanceProfile,
-  transactions: FinanzaTransaction[]
+  transactions: FinanzaTransaction[],
+  refDate: Date = new Date()
 ): string {
-  const now = new Date();
-  const hace7Dias = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-  const weeklyTx = filterByDateRange(transactions, hace7Dias, now);
+  const { inicio, fin } = getWeekDateRange(refDate);
+  const weeklyTx = filterByDateRange(transactions, inicio, fin);
   const { totalIngresos, totalGastos, balancePeriodo } = calculateTotals(weeklyTx);
+  const topExpense = getTopExpenseCategory(weeklyTx);
+
+  const inicioStr = formatDateDDMMAAAA(inicio);
+  const finStr = formatDateDDMMAAAA(fin);
 
   let text = `*Resumen Semanal de Finanzas*\n`;
   text += `Usuario: *${escapeMarkdown(usuario)}*\n`;
+  text += `📅 Periodo: *${escapeMarkdown(inicioStr)}* al *${escapeMarkdown(finStr)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━\n`;
   text += `• Total Ingresos: *$${escapeCop(totalIngresos)} COP*\n`;
   text += `• Total Gastos: *$${escapeCop(totalGastos)} COP*\n`;
   text += `• Balance de la semana: *$${escapeCop(balancePeriodo)} COP*\n\n`;
+
+  if (topExpense) {
+    text += `🔥 *Categoría con más gastos:* *${escapeMarkdown(topExpense.category)}* \\(*$${escapeCop(topExpense.total)} COP*\\)\n\n`;
+  } else {
+    text += `🔥 *Categoría con más gastos:* _No se registraron gastos en este periodo_\n\n`;
+  }
+
   text += `💰 *Saldo general actual:* *$${escapeCop(profile.balance)} COP*\n\n`;
 
   if (weeklyTx.length === 0) {
-    text += `_No registraste transacciones en los últimos 7 días\._`;
+    text += `_No registraste transacciones en esta semana\._`;
   } else {
     text += `*Desglose por categoría:*\n`;
     const catMap = groupByCategory(weeklyTx);
     for (const [cat, data] of catMap.entries()) {
       text += `• *${escapeMarkdown(cat)}*: `;
-      if (data.ingresos > 0) text += `+$$${escapeCop(data.ingresos)} `;
+      if (data.ingresos > 0) text += `+$${escapeCop(data.ingresos)} `;
       if (data.gastos > 0) text += `\\-$${escapeCop(data.gastos)}`;
       text += `\n`;
     }
@@ -157,34 +238,46 @@ export function buildWeeklyReport(
   return text;
 }
 
-/** Construye el informe de resumen mensual. */
+/** Construye el informe de resumen mensual (Mes actual). */
 export function buildMonthlyReport(
   usuario: string,
   profile: UserFinanceProfile,
-  transactions: FinanzaTransaction[]
+  transactions: FinanzaTransaction[],
+  refDate: Date = new Date()
 ): string {
-  const now = new Date();
-  const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthlyTx = filterByDateRange(transactions, inicioMes, now);
+  const { inicio, fin } = getMonthDateRange(refDate);
+  const monthlyTx = filterByDateRange(transactions, inicio, fin);
   const { totalIngresos, totalGastos, balancePeriodo } = calculateTotals(monthlyTx);
-  const nombreMes = MESES[now.getMonth()]!;
+  const topExpense = getTopExpenseCategory(monthlyTx);
 
-  let text = `*Resumen Mensual de Finanzas* \\(${nombreMes} ${now.getFullYear()}\\)\n`;
+  const nombreMes = MESES[refDate.getMonth()]!;
+  const inicioStr = formatDateDDMMAAAA(inicio);
+  const finStr = formatDateDDMMAAAA(fin);
+
+  let text = `*Resumen Mensual de Finanzas* \\(${escapeMarkdown(nombreMes)} ${refDate.getFullYear()}\\)\n`;
   text += `Usuario: *${escapeMarkdown(usuario)}*\n`;
+  text += `🗓️ Periodo: *${escapeMarkdown(inicioStr)}* al *${escapeMarkdown(finStr)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━\n`;
   text += `• Total Ingresos: *$${escapeCop(totalIngresos)} COP*\n`;
   text += `• Total Gastos: *$${escapeCop(totalGastos)} COP*\n`;
   text += `• Balance del mes: *$${escapeCop(balancePeriodo)} COP*\n\n`;
+
+  if (topExpense) {
+    text += `🔥 *Categoría con más gastos:* *${escapeMarkdown(topExpense.category)}* \\(*$${escapeCop(topExpense.total)} COP*\\)\n\n`;
+  } else {
+    text += `🔥 *Categoría con más gastos:* _No se registraron gastos en este periodo_\n\n`;
+  }
+
   text += `💰 *Saldo general actual:* *$${escapeCop(profile.balance)} COP*\n\n`;
 
   if (monthlyTx.length === 0) {
-    text += `_No tienes transacciones en lo que va de ${nombreMes}\._`;
+    text += `_No tienes transacciones en lo que va de ${escapeMarkdown(nombreMes)}\._`;
   } else {
     text += `*Desglose por categoría:*\n`;
     const catMap = groupByCategory(monthlyTx);
     for (const [cat, data] of catMap.entries()) {
       text += `• *${escapeMarkdown(cat)}*: `;
-      if (data.ingresos > 0) text += `+$$${escapeCop(data.ingresos)} `;
+      if (data.ingresos > 0) text += `+$${escapeCop(data.ingresos)} `;
       if (data.gastos > 0) text += `\\-$${escapeCop(data.gastos)}`;
       text += `\n`;
     }
@@ -193,65 +286,62 @@ export function buildMonthlyReport(
   return text;
 }
 
-/** Construye el informe de resumen anual. */
+/** Construye el informe de resumen anual (Año actual). */
 export function buildAnnualReport(
   usuario: string,
   profile: UserFinanceProfile,
-  transactions: FinanzaTransaction[]
+  transactions: FinanzaTransaction[],
+  refDate: Date = new Date()
 ): string {
-  const now = new Date();
-  const inicioAnio = new Date(now.getFullYear(), 0, 1);
-  const annualTx = filterByDateRange(transactions, inicioAnio, now);
+  const { inicio, fin } = getAnnualDateRange(refDate);
+  const annualTx = filterByDateRange(transactions, inicio, fin);
   const { totalIngresos, totalGastos, balancePeriodo } = calculateTotals(annualTx);
+  const topExpense = getTopExpenseCategory(annualTx);
 
-  let text = `*Resumen Anual de Finanzas* \\(${now.getFullYear()}\\)\n`;
+  const year = refDate.getFullYear();
+  const inicioStr = formatDateDDMMAAAA(inicio);
+  const finStr = formatDateDDMMAAAA(fin);
+
+  let text = `*Resumen Anual de Finanzas* \\(${year}\\)\n`;
   text += `Usuario: *${escapeMarkdown(usuario)}*\n`;
+  text += `📊 Periodo: *${escapeMarkdown(inicioStr)}* al *${escapeMarkdown(finStr)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━\n`;
   text += `• Total Ingresos: *$${escapeCop(totalIngresos)} COP*\n`;
   text += `• Total Gastos: *$${escapeCop(totalGastos)} COP*\n`;
   text += `• Balance del año: *$${escapeCop(balancePeriodo)} COP*\n\n`;
+
+  if (topExpense) {
+    text += `🔥 *Categoría con más gastos:* *${escapeMarkdown(topExpense.category)}* \\(*$${escapeCop(topExpense.total)} COP*\\)\n\n`;
+  } else {
+    text += `🔥 *Categoría con más gastos:* _No se registraron gastos en este periodo_\n\n`;
+  }
+
   text += `💰 *Saldo general actual:* *$${escapeCop(profile.balance)} COP*\n\n`;
 
   if (annualTx.length === 0) {
     text += `_No registraste transacciones en este año\._`;
   } else {
     text += `*Totales por mes:*\n`;
-    for (let m = 0; m <= now.getMonth(); m++) {
-      const inicio = new Date(now.getFullYear(), m, 1);
-      const fin = new Date(now.getFullYear(), m + 1, 0, 23, 59, 59);
-      const mesTx = filterByDateRange(annualTx, inicio, fin);
+    for (let m = 0; m <= refDate.getMonth(); m++) {
+      const inicioMes = new Date(year, m, 1, 0, 0, 0, 0);
+      const finMes = new Date(year, m + 1, 0, 23, 59, 59, 999);
+      const mesTx = filterByDateRange(annualTx, inicioMes, finMes);
       const totals = calculateTotals(mesTx);
-      text += `• *${escapeMarkdown(MESES[m]!)}*: Ingresos: +$$${escapeCop(totals.totalIngresos)} COP | Gastos: \\-$${escapeCop(totals.totalGastos)} COP\n`;
+      text += `• *${escapeMarkdown(MESES[m]!)}*: Ingresos: +$${escapeCop(totals.totalIngresos)} COP | Gastos: \\-$${escapeCop(totals.totalGastos)} COP | Balance: *$${escapeCop(totals.balancePeriodo)} COP*\n`;
     }
   }
 
   return text;
 }
 
-/** Construye el informe de resumen por categorías. */
+/** Construye el informe de resumen por categorías (Por ahora no disponible). */
 export function buildCategoryReport(
-  usuario: string,
-  profile: UserFinanceProfile,
-  transactions: FinanzaTransaction[]
+  _usuario: string,
+  _profile: UserFinanceProfile,
+  _transactions: FinanzaTransaction[]
 ): string {
-  let text = `*Resumen General por Categorías*\n`;
-  text += `Usuario: *${escapeMarkdown(usuario)}*\n`;
-  text += `━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `💰 *Saldo general actual:* *$${escapeCop(profile.balance)} COP*\n\n`;
-
-  if (transactions.length === 0) {
-    text += `_No tienes ninguna transacción registrada hasta la fecha\._`;
-  } else {
-    const catMap = groupByCategory(transactions);
-    text += `*Desglose acumulado por categoría:*\n\n`;
-    for (const [cat, data] of catMap.entries()) {
-      text += `📂 *${escapeMarkdown(cat)}*\n`;
-      if (data.ingresos > 0) text += `   • Ingresos: +$$${escapeCop(data.ingresos)} COP\n`;
-      if (data.gastos > 0) text += `   • Gastos: \\-$${escapeCop(data.gastos)} COP\n`;
-      const neto = data.ingresos - data.gastos;
-      text += `   • Neto: *$${escapeCop(neto)} COP*\n\n`;
-    }
-  }
-
-  return text;
+  return (
+    `📂 *Resumen por Categoría*\n\n` +
+    `_Esta funcionalidad no está disponible por el momento y estará lista próximamente\._`
+  );
 }
