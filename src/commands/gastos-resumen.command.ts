@@ -1,13 +1,14 @@
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
-import { dataStore } from '../services/dataStore.service.js';
-import { commandTrigger } from '../utils/commandMatcher.js';
-import { deleteCommandMessage, safeReply } from '../utils/telegramHelpers.js';
+import { dataStore } from '../services/data-store.service.js';
+import { commandTrigger } from '../utils/command-matcher.js';
+import { deleteCommandMessage, safeReply } from '../utils/telegram-helpers.js';
 import {
   MESES,
   buildCurrentMonthSummaryMessage,
   gastosInRange,
 } from '../utils/gastos.js';
+import { MESSAGES } from '../constants/messages.js';
 
 export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
   const handler = async (ctx: BotContext): Promise<void> => {
@@ -16,7 +17,7 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
     deleteCommandMessage(ctx);
 
     if (!chatId) {
-      await safeReply(ctx, 'No se pudo determinar el chat.');
+      await safeReply(ctx, MESSAGES.GASTO_RESUMEN_NO_CHAT);
       return;
     }
 
@@ -31,7 +32,7 @@ export function registerGastosResumenCommand(bot: Telegraf<BotContext>): void {
     if (gastos.length === 0) {
       await safeReply(
         ctx,
-        `No tienes gastos registrados en lo que va de *${MESES[now.getMonth()]}*\\.`
+        MESSAGES.GASTO_RESUMEN_EMPTY(MESES[now.getMonth()]!)
       );
       return;
     }

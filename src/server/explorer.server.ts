@@ -5,7 +5,7 @@ import path from 'path';
 import { Telegraf } from 'telegraf';
 import { config } from '../config/env.js';
 import { BotContext } from '../types/bot.types.js';
-import { accessCodeService } from '../services/accessCode.service.js';
+import { accessCodeService } from '../services/access-code.service.js';
 
 const BASE_STORAGE_PATH = path.resolve(config.filesStoragePath);
 

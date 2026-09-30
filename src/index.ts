@@ -1,7 +1,6 @@
 import { createBot } from './bot.js';
 import { createExplorerServer } from './server/explorer.server.js';
-
-const EXPLORER_PORT = parseInt(process.env['EXPLORER_PORT'] ?? '3000', 10);
+import { config } from './config/env.js';
 
 process.on('unhandledRejection', (reason) => {
   const msg = reason instanceof Error ? reason.stack ?? reason.message : String(reason);
@@ -21,13 +20,11 @@ async function main(): Promise<void> {
     await bot.telegram.setMyCommands([
       { command: 'start', description: 'Registrarte y ver bienvenida' },
       { command: 'help', description: 'Ver la guía completa de comandos' },
-      // { command: 'clima', description: 'Clima en tiempo real de una ciudad' },
       { command: 'tra', description: 'Traducir un texto al español' },
       { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
       { command: 'ask', description: 'Preguntarle algo a la IA' },
       { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
-      // { command: 'phone', description: 'Vincular tu teléfono' },
       { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
       { command: 'gasto', description: 'Registrar un gasto en pesos colombianos' },
       { command: 'gasto_resumen', description: 'Resumen de gastos del mes en curso' },
@@ -38,14 +35,14 @@ async function main(): Promise<void> {
   }
 
   const explorerApp = createExplorerServer(bot);
-  const explorerHttpServer = explorerApp.listen(EXPLORER_PORT, () => {
-    console.info(`[INFO]  Explorer server escuchando en http://localhost:${EXPLORER_PORT}`);
+  const explorerHttpServer = explorerApp.listen(config.explorerPort, () => {
+    console.info(`[INFO]  Explorer server escuchando en http://localhost:${config.explorerPort}`);
   });
 
   explorerHttpServer.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
       console.error(
-        `[ERROR] El puerto ${EXPLORER_PORT} ya está en uso. El explorer server (GlowPic) no pudo iniciarse, pero el bot de Telegram seguirá funcionando con normalidad.`
+        `[ERROR] El puerto ${config.explorerPort} ya está en uso. El explorer server (GlowPic) no pudo iniciarse, pero el bot de Telegram seguirá funcionando con normalidad.`
       );
     } else {
       console.error(`[ERROR] Explorer server: ${err.message}`);

@@ -3,8 +3,9 @@ import { BotContext } from '../types/bot.types.js';
 import { TranslationService } from '../services/translation.service.js';
 import { validateTranslateArg } from '../utils/validators.js';
 import { formatTranslationMessage } from '../utils/formatters.js';
-import { commandTrigger, getCommandArgs } from '../utils/commandMatcher.js';
-import { deleteCommandMessage } from '../utils/telegramHelpers.js';
+import { commandTrigger, getCommandArgs } from '../utils/command-matcher.js';
+import { deleteCommandMessage } from '../utils/telegram-helpers.js';
+import { MESSAGES } from '../constants/messages.js';
 
 const translationService = new TranslationService();
 
@@ -18,10 +19,7 @@ function resolveTextToTranslate(ctx: BotContext, args: string): { text?: string;
       undefined;
 
     if (!repliedText) {
-      return {
-        error:
-          'El mensaje al que respondiste no tiene texto para traducir\\.',
-      };
+      return { error: MESSAGES.TRA_USAGE };
     }
     return { text: repliedText };
   }
@@ -56,9 +54,7 @@ export function registerTraCommand(bot: Telegraf<BotContext>): void {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       console.error(`[ERROR] /tra: ${msg}`);
-      await ctx.reply('No pude traducir el texto\\. Intenta de nuevo más tarde\\.', {
-        parse_mode: 'MarkdownV2',
-      });
+      await ctx.reply(MESSAGES.TRA_ERROR, { parse_mode: 'MarkdownV2' });
     } finally {
       await deleteCommandMessage(ctx);
     }

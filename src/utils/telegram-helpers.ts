@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Context } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
 
 export async function deleteCommandMessage(ctx: BotContext): Promise<void> {
@@ -8,8 +9,7 @@ export async function deleteCommandMessage(ctx: BotContext): Promise<void> {
     if (!chatId || !messageId) return;
     await ctx.telegram.deleteMessage(chatId, messageId);
   } catch {
-
-
+    // Ignorar si el mensaje ya fue eliminado o no se tienen permisos
   }
 }
 
@@ -39,7 +39,6 @@ export async function safeReply(ctx: BotContext, text: string): Promise<void> {
   }
 }
 
-
 export interface TelegramFileData {
   buffer: Buffer;
   mimeType: string;
@@ -66,4 +65,30 @@ export async function downloadTelegramFile(
     mimeType: fallbackMimeType,
     fileName: fallbackName,
   };
+}
+
+export async function isBotAdmin(ctx: Context): Promise<boolean> {
+  try {
+    if (!ctx.chat) return false;
+    const botId = ctx.botInfo?.id;
+    if (!botId) return false;
+    const member = await ctx.telegram.getChatMember(ctx.chat.id, botId);
+    return member.status === 'administrator' || member.status === 'creator';
+  } catch {
+    return false;
+  }
+}
+
+export async function isUserAdmin(ctx: Context): Promise<boolean> {
+  try {
+    if (!ctx.chat || !ctx.from) return false;
+    const member = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
+    return member.status === 'administrator' || member.status === 'creator';
+  } catch {
+    return false;
+  }
+}
+
+export function isGroup(ctx: Context): boolean {
+  return ctx.chat?.type === 'group' || ctx.chat?.type === 'supergroup';
 }

@@ -1,4 +1,4 @@
-import { Gasto } from '../services/dataStore.service.js';
+import { Gasto } from '../services/data-store.service.js';
 import { escapeMarkdown } from './formatters.js';
 
 export const MESES = [

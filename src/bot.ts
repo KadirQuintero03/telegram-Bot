@@ -4,9 +4,10 @@ import { config } from './config/env.js';
 import { loggerMiddleware } from './middlewares/logger.middleware.js';
 import { registerAllCommands } from './commands/index.js';
 import { registerMediaHandlers } from './handlers/media.handler.js';
-import { registerEmailFlowHandler } from './handlers/emailFlow.handler.js';
-import { registerCloudFlowHandler } from './handlers/cloudFlow.handler.js';
+import { registerEmailFlowHandler } from './handlers/email-flow.handler.js';
+import { registerCloudFlowHandler } from './handlers/cloud-flow.handler.js';
 import { schedulerService } from './services/scheduler.service.js';
+import { MESSAGES } from './constants/messages.js';
 
 export function createBot(): Telegraf<BotContext> {
   const bot = new Telegraf<BotContext>(config.botToken);
@@ -26,7 +27,7 @@ export function createBot(): Telegraf<BotContext> {
     console.error(`[ERROR] Update ${ctx.update.update_id} provocó error: ${error.message}`);
     console.error(error.stack);
 
-    ctx.reply('Ocurrió un error inesperado. Por favor intenta de nuevo.').catch(() => {
+    ctx.reply(MESSAGES.GENERIC_ERROR).catch(() => {
       console.error('[ERROR] No se pudo enviar el mensaje de error al usuario.');
     });
   });

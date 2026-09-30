@@ -34,7 +34,6 @@ function formatCop(amount: number): string {
 
 export function formatDolarRateMessage(data: DolarRate): string {
   const rate = escapeMarkdown(formatCop(data.rate));
-  const date = escapeMarkdown(data.lastUpdate);
   return (
     `*Precio del Dólar hoy*\n\n` +
     `1 USD \\= *$${rate} COP*\n\n`
@@ -47,7 +46,6 @@ export function formatDolarConversionMessage(data: DolarConversion): string {
   );
   const cop = escapeMarkdown(formatCop(data.copAmount));
   const rate = escapeMarkdown(formatCop(data.rate));
-  const date = escapeMarkdown(data.lastUpdate);
   return (
     `*Conversión de Dólares a Pesos*\n\n` +
     `$${usd} USD \\= *$${cop} COP*\n\n` +

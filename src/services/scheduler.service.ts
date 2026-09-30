@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
-import { dataStore, Gasto, Reminder } from './dataStore.service.js';
+import { dataStore, Gasto, Reminder } from './data-store.service.js';
 import {
   MESES,
   buildAnnualSummaryMessage,

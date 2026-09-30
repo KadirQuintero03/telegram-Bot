@@ -27,4 +27,5 @@ export const config = {
   emailPass: requireEnv('EMAIL_PASS'),
   geminiApiKey: (process.env['GEMINI_API_KEY'] ?? '').trim(),
   geminiModel: (process.env['GEMINI_MODEL'] ?? 'gemini-3.1-flash-lite').trim(),
+  explorerPort: parseInt(process.env['EXPLORER_PORT'] ?? '3000', 10),
 };
