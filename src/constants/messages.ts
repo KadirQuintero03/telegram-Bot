@@ -100,7 +100,7 @@ export const MESSAGES = {
 
 ━━━━━━━━━━━━━━━━━━━━
 */start*
-Verifica que el bot esté activo y muestra bienvenida\\.
+Verifica que el bot esté activo y muestra la bienvenida\\.
 
 */tra \\<texto\\>*
 Traduce cualquier texto al español latinoamericano\\.
