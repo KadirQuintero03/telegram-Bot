@@ -20,5 +20,5 @@ export const config = {
   downloaderApiUrl: (process.env['DOWNLOADER_API'] ?? '').trim(),
   geminiApiKey: (process.env['GEMINI_API_KEY'] ?? '').trim(),
   geminiModel: (process.env['GEMINI_MODEL'] ?? 'gemini-3.1-flash-lite').trim(),
-  explorerPort: parseInt(process.env['EXPLORER_PORT'] ?? '3000', 10),
+  explorerPort: parseInt(process.env['EXPLORER_PORT'] ?? '3050', 10),
 };
