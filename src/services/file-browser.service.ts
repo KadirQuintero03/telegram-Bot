@@ -12,20 +12,29 @@ export interface CloudFileInfo {
 export const FILE_PAGE_SIZE = 10;
 
 export class FileBrowserService {
-  listFiles(userFolder: string, category: MediaCategory): CloudFileInfo[] {
+  async listFiles(userFolder: string, category: MediaCategory): Promise<CloudFileInfo[]> {
     const dir = path.join(userFolder, CATEGORY_DIRS[category]);
-    if (!fs.existsSync(dir)) return [];
+    try {
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+      const fileEntries = entries.filter((e) => e.isFile());
 
-    const files = fs
-      .readdirSync(dir)
-      .filter((f) => fs.statSync(path.join(dir, f)).isFile())
-      .map((f) => {
-        const fullPath = path.join(dir, f);
-        const stat = fs.statSync(fullPath);
-        return { name: f, fullPath, sizeBytes: stat.size, mtimeMs: stat.mtimeMs };
-      });
+      const files = await Promise.all(
+        fileEntries.map(async (entry) => {
+          const fullPath = path.join(dir, entry.name);
+          const stat = await fs.promises.stat(fullPath);
+          return {
+            name: entry.name,
+            fullPath,
+            sizeBytes: stat.size,
+            mtimeMs: stat.mtimeMs,
+          };
+        })
+      );
 
-    return files.sort((a, b) => a.mtimeMs - b.mtimeMs);
+      return files.sort((a, b) => a.mtimeMs - b.mtimeMs);
+    } catch {
+      return [];
+    }
   }
 
   getPage(files: CloudFileInfo[], offset: number): { page: CloudFileInfo[]; hasNext: boolean } {

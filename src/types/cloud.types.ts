@@ -8,4 +8,5 @@ export interface CloudSessionData {
     offset: number;
     pageFiles: string[]; 
     step: CloudFlowStep;
+    updatedAt?: number;
 }

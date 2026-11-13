@@ -15,18 +15,22 @@ export class FileStorageService {
   ): Promise<string> {
     const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]);
     const safeFileName = this.sanitizeFileName(fileName);
-    const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
+    const finalPath = await this.resolveUniqueFilePath(categoryDir, safeFileName);
 
-    fs.mkdirSync(categoryDir, { recursive: true });
+    await fs.promises.mkdir(categoryDir, { recursive: true });
     await this.downloadFile(fileUrl, finalPath);
 
     if (checkDuplicates) {
-      const buffer = fs.readFileSync(finalPath);
-      const duplicate = this.findDuplicateByHash(categoryDir, buffer, finalPath);
-      if (duplicate) {
-        fs.unlinkSync(finalPath);
-        console.info(`[FileStorage] Duplicado detectado, no se guarda: ${safeFileName}`);
-        return duplicate;
+      try {
+        const fileHash = await this.hashFile(finalPath);
+        const duplicate = await this.findDuplicateByHash(categoryDir, fileHash, finalPath);
+        if (duplicate) {
+          await fs.promises.unlink(finalPath).catch(() => {});
+          console.info(`[FileStorage] Duplicado detectado, no se guarda: ${safeFileName}`);
+          return duplicate;
+        }
+      } catch (err) {
+        console.warn(`[FileStorage] Advertencia al verificar duplicados:`, err);
       }
     }
 
@@ -42,10 +46,11 @@ export class FileStorageService {
     checkDuplicates = false
   ): Promise<string> {
     const categoryDir = path.join(userFolder, CATEGORY_DIRS[category]);
-    fs.mkdirSync(categoryDir, { recursive: true });
+    await fs.promises.mkdir(categoryDir, { recursive: true });
 
     if (checkDuplicates) {
-      const duplicate = this.findDuplicateByHash(categoryDir, buffer);
+      const bufferHash = this.hashBuffer(buffer);
+      const duplicate = await this.findDuplicateByHash(categoryDir, bufferHash);
       if (duplicate) {
         console.info(`[FileStorage] Duplicado detectado, no se guarda: ${fileName}`);
         return duplicate;
@@ -53,25 +58,34 @@ export class FileStorageService {
     }
 
     const safeFileName = this.sanitizeFileName(fileName);
-    const finalPath = this.resolveUniqueFilePath(categoryDir, safeFileName);
-    fs.writeFileSync(finalPath, buffer);
+    const finalPath = await this.resolveUniqueFilePath(categoryDir, safeFileName);
+    await fs.promises.writeFile(finalPath, buffer);
 
     console.info(`[FileStorage] Archivo guardado: ${finalPath}`);
     return finalPath;
   }
 
-  private resolveUniqueFilePath(dir: string, fileName: string): string {
+  private async resolveUniqueFilePath(dir: string, fileName: string): Promise<string> {
     const ext = path.extname(fileName);
     const base = path.basename(fileName, ext);
     let candidate = path.join(dir, fileName);
     let counter = 1;
 
-    while (fs.existsSync(candidate)) {
+    while (await this.fileExists(candidate)) {
       candidate = path.join(dir, `${base}_${counter}${ext}`);
       counter++;
     }
 
     return candidate;
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.promises.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private sanitizeFileName(name: string): string {
@@ -82,21 +96,40 @@ export class FileStorageService {
     return crypto.createHash('sha256').update(buffer).digest('hex');
   }
 
-  private findDuplicateByHash(dir: string, buffer: Buffer, excludePath?: string): string | null {
-    if (!fs.existsSync(dir)) return null;
-    const targetHash = this.hashBuffer(buffer);
-    const entries = fs.readdirSync(dir);
+  private hashFile(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const hash = crypto.createHash('sha256');
+      const stream = fs.createReadStream(filePath);
+      stream.on('data', (chunk) => hash.update(chunk));
+      stream.on('end', () => resolve(hash.digest('hex')));
+      stream.on('error', reject);
+    });
+  }
 
-    for (const entry of entries) {
-      const entryPath = path.join(dir, entry);
-      if (entryPath === excludePath) continue;
+  private async findDuplicateByHash(
+    dir: string,
+    targetHash: string,
+    excludePath?: string
+  ): Promise<string | null> {
+    try {
+      const entries = await fs.promises.readdir(dir);
 
-      try {
-        const existingBuffer = fs.readFileSync(entryPath);
-        if (this.hashBuffer(existingBuffer) === targetHash) return entryPath;
-      } catch {
-        continue;
+      for (const entry of entries) {
+        const entryPath = path.join(dir, entry);
+        if (entryPath === excludePath) continue;
+
+        try {
+          const stat = await fs.promises.stat(entryPath);
+          if (!stat.isFile()) continue;
+
+          const existingHash = await this.hashFile(entryPath);
+          if (existingHash === targetHash) return entryPath;
+        } catch {
+          continue;
+        }
       }
+    } catch {
+      return null;
     }
 
     return null;
@@ -120,7 +153,7 @@ export class FileStorageService {
 
           if (response.statusCode !== 200) {
             file.close();
-            fs.unlink(destPath, () => {});
+            fs.promises.unlink(destPath).catch(() => {});
             reject(new Error(`Error HTTP al descargar: ${response.statusCode}`));
             return;
           }
@@ -128,12 +161,12 @@ export class FileStorageService {
           response.pipe(file);
           file.on('finish', () => file.close(() => resolve()));
           file.on('error', (err) => {
-            fs.unlink(destPath, () => {});
+            fs.promises.unlink(destPath).catch(() => {});
             reject(err);
           });
         })
         .on('error', (err) => {
-          fs.unlink(destPath, () => {});
+          fs.promises.unlink(destPath).catch(() => {});
           reject(err);
         });
     });

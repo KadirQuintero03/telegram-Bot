@@ -22,7 +22,7 @@ export function registerCloudFlowHandler(bot: Telegraf<BotContext>): void {
       return;
     }
 
-    const allFiles = fileBrowserService.listFiles(session.userFolder, session.category);
+    const allFiles = await fileBrowserService.listFiles(session.userFolder, session.category);
     const { page } = fileBrowserService.getPage(allFiles, session.offset);
 
     if (page.length === 0) {

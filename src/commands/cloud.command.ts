@@ -128,7 +128,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
     const category = ctx.match[1] as MediaCategory;
     if (!VALID_CATEGORIES.includes(category)) return;
 
-    const allFiles = fileBrowserService.listFiles(userFolder, category);
+    const allFiles = await fileBrowserService.listFiles(userFolder, category);
 
     if (allFiles.length === 0) {
       await ctx.reply(`No tienes archivos guardados en *${CATEGORY_LABELS[category]}*\\.`, {
@@ -160,7 +160,7 @@ export function registerCloudCommand(bot: Telegraf<BotContext>): void {
     const session = cloudSessionService.getSession(userId);
     if (!session.category || !session.userFolder) return;
 
-    const allFiles = fileBrowserService.listFiles(session.userFolder, session.category);
+    const allFiles = await fileBrowserService.listFiles(session.userFolder, session.category);
     const nextOffset = session.offset + FILE_PAGE_SIZE;
 
     if (nextOffset >= allFiles.length) {
