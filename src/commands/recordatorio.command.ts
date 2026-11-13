@@ -14,8 +14,8 @@ const EXTRACTION_PROMPT =
   'Eres un asistente que extrae datos de recordatorios. ' +
   'A partir del texto, devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: ' +
   '{"tarea":"...","fecha":"AAAA-MM-DD","hora":"HH:MM"} . ' +
-  'Interpreta frases naturales (ej: "mañana", "el lunes", "a las 8am"). ' +
-  'Usa la fecha de HOY como referencia. No agregues texto adicional, solo el JSON.';
+  'Interpreta frases naturales (ej: "mañana", "el lunes", "a las 8am", "en 2 horas"). ' +
+  'Usa la fecha y hora de referencia actual provista para calcular la fecha y hora resultante. No agregues texto adicional, solo el JSON.';
 
 interface ParsedReminder {
   tarea: string;
@@ -25,7 +25,18 @@ interface ParsedReminder {
 
 async function parseReminder(prompt: string): Promise<ParsedReminder | null> {
   try {
-    const response = await geminiService.generateText(`${EXTRACTION_PROMPT}\nTexto: ${prompt}`);
+    const now = new Date();
+    const todayIso = now.toISOString().split('T')[0];
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const dayOfWeek = dayNames[now.getDay()];
+
+    const contextInstruction =
+      `${EXTRACTION_PROMPT}\n` +
+      `[Referencia temporal actual: Hoy es ${dayOfWeek}, fecha: ${todayIso}, hora local: ${currentTime}]\n` +
+      `Texto: ${prompt}`;
+
+    const response = await geminiService.generateText(contextInstruction);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     return JSON.parse(jsonMatch[0]) as ParsedReminder;
