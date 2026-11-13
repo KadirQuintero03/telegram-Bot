@@ -8,7 +8,7 @@ import { Telegraf } from 'telegraf';
 import { config } from '../config/env.js';
 import { BotContext } from '../types/bot.types.js';
 import { accessCodeService } from '../services/access-code.service.js';
-import { photosService } from '../photos/index.js';
+import { photosService, photosMetadataService } from '../photos/index.js';
 
 const BASE_STORAGE_PATH = path.resolve(config.filesStoragePath);
 const THUMBNAIL_CACHE_DIR = path.resolve(BASE_STORAGE_PATH, '.thumbnails');
@@ -25,6 +25,8 @@ interface ExplorerEntry {
   path: string;
   size?: number;
   modifiedAt?: number;
+  isFavorite?: boolean;
+  isArchived?: boolean;
 }
 
 function resolveSafePath(owner: string, relativePath: string): string {
@@ -112,7 +114,14 @@ async function getOrCreateThumbnail(owner: string, relativePath: string, targetP
   }
 }
 
-async function scanMediaRecursively(dir: string, ownerRoot: string, maxDepth = 4, depth = 0): Promise<ExplorerEntry[]> {
+async function scanMediaRecursively(
+  dir: string,
+  ownerRoot: string,
+  favSet: Set<string>,
+  archSet: Set<string>,
+  maxDepth = 5,
+  depth = 0
+): Promise<ExplorerEntry[]> {
   if (depth > maxDepth) return [];
   const entries: ExplorerEntry[] = [];
 
@@ -124,19 +133,25 @@ async function scanMediaRecursively(dir: string, ownerRoot: string, maxDepth = 4
       const fullPath = path.join(dir, item.name);
 
       if (item.isDirectory()) {
-        const sub = await scanMediaRecursively(fullPath, ownerRoot, maxDepth, depth + 1);
+        const sub = await scanMediaRecursively(fullPath, ownerRoot, favSet, archSet, maxDepth, depth + 1);
         entries.push(...sub);
       } else if (item.isFile()) {
         if (item.name.endsWith('.thumb.jpg')) continue;
         const ext = path.extname(item.name).toLowerCase();
         if (MEDIA_EXTENSIONS.has(ext)) {
+          const rel = toRelative(ownerRoot, fullPath);
+          // Los archivos archivados no se muestran en la galería general
+          if (archSet.has(rel)) continue;
+
           const stat = await fs.promises.stat(fullPath);
           entries.push({
             name: item.name,
             type: 'file',
-            path: toRelative(ownerRoot, fullPath),
+            path: rel,
             size: stat.size,
             modifiedAt: stat.mtimeMs,
+            isFavorite: favSet.has(rel),
+            isArchived: false,
           });
         }
       }
@@ -221,6 +236,14 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
         (dirent) => !dirent.name.startsWith('.') && !dirent.name.endsWith('.thumb.jpg')
       );
 
+      const metadata = await photosMetadataService.getMetadata(owner).catch(() => ({
+        favorites: [],
+        archived: [],
+        albums: {},
+      }));
+      const favSet = new Set(metadata.favorites);
+      const archSet = new Set(metadata.archived);
+
       const entries: ExplorerEntry[] = await Promise.all(
         filtered.map(async (dirent) => {
           const entryAbsolutePath = path.join(target, dirent.name);
@@ -241,6 +264,8 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
             path: entryRelativePath,
             size: stat.size,
             modifiedAt: stat.mtimeMs,
+            isFavorite: favSet.has(entryRelativePath),
+            isArchived: archSet.has(entryRelativePath),
           };
         })
       );
@@ -275,7 +300,11 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
         return res.status(404).json({ error: 'El usuario no tiene una carpeta asociada.' });
       }
 
-      const media = await scanMediaRecursively(ownerRoot, ownerRoot);
+      const metadata = await photosMetadataService.getMetadata(owner);
+      const favSet = new Set(metadata.favorites);
+      const archSet = new Set(metadata.archived);
+
+      const media = await scanMediaRecursively(ownerRoot, ownerRoot, favSet, archSet);
       media.sort((a, b) => (b.modifiedAt ?? 0) - (a.modifiedAt ?? 0));
 
       res.setHeader('Cache-Control', 'private, no-cache');
@@ -373,6 +402,166 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
     }
   });
 
+  // --- FAVORITOS ---
+  app.get('/explorer/favorites', requireAuth, async (req: Request, res: Response) => {
+    const owner = (req.query.owner as string) ?? '';
+
+    if (!owner) {
+      return res.status(400).json({ error: 'Falta identificar al usuario (owner).' });
+    }
+
+    try {
+      const favorites = await photosService.listFavorites(owner);
+      res.setHeader('Cache-Control', 'private, no-cache');
+      res.json({
+        currentPath: '',
+        entries: favorites,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al listar favoritos';
+      console.error('[ExplorerServer] Error en /explorer/favorites:', msg);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  app.post('/explorer/favorite', requireAuth, async (req: Request, res: Response) => {
+    const owner = ((req.body?.owner as string) ?? (req.query.owner as string) ?? '').trim();
+    const filePath = ((req.body?.path as string) ?? (req.query.path as string) ?? '').trim();
+    const isFavorite = typeof req.body?.isFavorite === 'boolean' ? req.body.isFavorite : undefined;
+
+    if (!owner || !filePath) {
+      return res.status(400).json({ error: 'Debes proporcionar owner y path.' });
+    }
+
+    try {
+      const result = await photosMetadataService.setFavorite(owner, filePath, isFavorite);
+      res.json({ success: true, path: filePath, isFavorite: result.isFavorite });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al actualizar favorito';
+      console.error('[ExplorerServer] Error en /explorer/favorite:', msg);
+      res.status(400).json({ error: msg });
+    }
+  });
+
+  // --- ARCHIVO ---
+  app.get('/explorer/archived', requireAuth, async (req: Request, res: Response) => {
+    const owner = (req.query.owner as string) ?? '';
+
+    if (!owner) {
+      return res.status(400).json({ error: 'Falta identificar al usuario (owner).' });
+    }
+
+    try {
+      const archived = await photosService.listArchived(owner);
+      res.setHeader('Cache-Control', 'private, no-cache');
+      res.json({
+        currentPath: '',
+        entries: archived,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al listar archivados';
+      console.error('[ExplorerServer] Error en /explorer/archived:', msg);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  app.post('/explorer/archive', requireAuth, async (req: Request, res: Response) => {
+    const owner = ((req.body?.owner as string) ?? (req.query.owner as string) ?? '').trim();
+    const filePath = ((req.body?.path as string) ?? (req.query.path as string) ?? '').trim();
+    const isArchived = typeof req.body?.isArchived === 'boolean' ? req.body.isArchived : undefined;
+
+    if (!owner || !filePath) {
+      return res.status(400).json({ error: 'Debes proporcionar owner y path.' });
+    }
+
+    try {
+      const result = await photosMetadataService.setArchived(owner, filePath, isArchived);
+      res.json({ success: true, path: filePath, isArchived: result.isArchived });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al actualizar archivo';
+      console.error('[ExplorerServer] Error en /explorer/archive:', msg);
+      res.status(400).json({ error: msg });
+    }
+  });
+
+  // --- ÁLBUMES CONTENIDO Y GESTIÓN ---
+  app.get('/explorer/albums/content', requireAuth, async (req: Request, res: Response) => {
+    const owner = (req.query.owner as string) ?? '';
+    const album = (req.query.album as string) ?? '';
+
+    if (!owner || !album) {
+      return res.status(400).json({ error: 'Debes proporcionar owner y el nombre o ID del álbum.' });
+    }
+
+    try {
+      const content = await photosService.getAlbumContent(owner, album);
+      res.setHeader('Cache-Control', 'private, no-cache');
+      res.json(content);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al obtener contenido del álbum';
+      console.error('[ExplorerServer] Error en /explorer/albums/content:', msg);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  app.post('/explorer/albums/add-item', requireAuth, async (req: Request, res: Response) => {
+    const owner = ((req.body?.owner as string) ?? (req.query.owner as string) ?? '').trim();
+    const album = ((req.body?.album as string) ?? (req.query.album as string) ?? '').trim();
+    const rawPaths = req.body?.paths ?? req.body?.path ?? req.query.path;
+
+    if (!owner || !album || !rawPaths) {
+      return res.status(400).json({ error: 'Debes proporcionar owner, album y path/paths.' });
+    }
+
+    const paths = Array.isArray(rawPaths) ? rawPaths : [rawPaths];
+
+    try {
+      const updated = await photosMetadataService.addItemsToAlbum(owner, album, paths);
+      res.json({ success: true, album: updated });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al añadir elementos al álbum';
+      console.error('[ExplorerServer] Error en /explorer/albums/add-item:', msg);
+      res.status(400).json({ error: msg });
+    }
+  });
+
+  app.post('/explorer/albums/remove-item', requireAuth, async (req: Request, res: Response) => {
+    const owner = ((req.body?.owner as string) ?? (req.query.owner as string) ?? '').trim();
+    const album = ((req.body?.album as string) ?? (req.query.album as string) ?? '').trim();
+    const filePath = ((req.body?.path as string) ?? (req.query.path as string) ?? '').trim();
+
+    if (!owner || !album || !filePath) {
+      return res.status(400).json({ error: 'Debes proporcionar owner, album y path.' });
+    }
+
+    try {
+      const updated = await photosMetadataService.removeItemFromAlbum(owner, album, filePath);
+      res.json({ success: true, album: updated });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al remover elemento del álbum';
+      console.error('[ExplorerServer] Error en /explorer/albums/remove-item:', msg);
+      res.status(400).json({ error: msg });
+    }
+  });
+
+  app.post('/explorer/albums/delete', requireAuth, async (req: Request, res: Response) => {
+    const owner = ((req.body?.owner as string) ?? (req.query.owner as string) ?? '').trim();
+    const album = ((req.body?.album as string) ?? (req.query.album as string) ?? '').trim();
+
+    if (!owner || !album) {
+      return res.status(400).json({ error: 'Debes proporcionar owner y album.' });
+    }
+
+    try {
+      await photosMetadataService.deleteAlbum(owner, album);
+      res.json({ success: true, message: 'Álbum eliminado correctamente.' });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error al eliminar el álbum';
+      console.error('[ExplorerServer] Error en /explorer/albums/delete:', msg);
+      res.status(400).json({ error: msg });
+    }
+  });
+
   app.get('/explorer/thumbnail', requireAuth, async (req: Request, res: Response) => {
     const owner = (req.query.owner as string) ?? '';
     const relativePath = (req.query.path as string) ?? '';
@@ -461,6 +650,11 @@ export function createExplorerServer(bot: Telegraf<BotContext>): Express {
           await fs.promises.unlink(companionThumb).catch(() => {});
         }
       }
+
+      // Limpiar referencias en favoritos, archivados y álbumes
+      await photosMetadataService.cleanReferencesOfDeletedFile(owner, relativePath).catch((err) => {
+        console.warn(`[ExplorerServer] Error limpiando metadatos de ${relativePath}:`, err);
+      });
 
       console.info(`[ExplorerServer] Eliminado con éxito: ${target}`);
       res.json({ success: true, message: 'Elemento eliminado correctamente.' });
