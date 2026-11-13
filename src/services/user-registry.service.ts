@@ -51,7 +51,9 @@ export class UserRegistryService {
       return path.join(config.filesStoragePath, existing.folderName);
     }
 
-    const folderName = this.sanitize(username);
+    // Incorpora telegramId para evitar colisiones entre usuarios con nombres similares
+    const safeSuffix = this.sanitize(username);
+    const folderName = `${telegramId}_${safeSuffix}`;
     const folderPath = path.join(config.filesStoragePath, folderName);
 
     for (const dir of Object.values(CATEGORY_DIRS)) {
@@ -150,9 +152,16 @@ export class UserRegistryService {
   }
 
   private saveRegistry(): void {
+    const tmpFile = `${REGISTRY_FILE}.tmp`;
     try {
-      fs.writeFileSync(REGISTRY_FILE, JSON.stringify(this.registry, null, 2), 'utf-8');
+      fs.writeFileSync(tmpFile, JSON.stringify(this.registry, null, 2), 'utf-8');
+      fs.renameSync(tmpFile, REGISTRY_FILE);
     } catch (err) {
+      if (fs.existsSync(tmpFile)) {
+        try {
+          fs.unlinkSync(tmpFile);
+        } catch {}
+      }
       const msg = err instanceof Error ? err.message : 'Error desconocido';
       console.error(`[UserRegistry] No se pudo guardar registry.json: ${msg}`);
       throw new Error(`No se pudo guardar el registro de usuarios: ${msg}`);
@@ -160,11 +169,13 @@ export class UserRegistryService {
   }
 
   private sanitize(text: string): string {
-    return text
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_\-]/gi, '')
-      .substring(0, 40) || `usuario_${Date.now()}`;
+    return (
+      text
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_\-]/gi, '')
+        .substring(0, 40) || `usuario_${Date.now()}`
+    );
   }
 }
 
