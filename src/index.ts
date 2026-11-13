@@ -20,15 +20,11 @@ async function main(): Promise<void> {
     await bot.telegram.setMyCommands([
       { command: 'start', description: 'Registrarte y ver bienvenida' },
       { command: 'help', description: 'Ver la guía completa de comandos' },
-      { command: 'tra', description: 'Traducir un texto al español' },
       { command: 'dolar', description: 'Ver o convertir el precio del dólar a COP' },
       { command: 'ask', description: 'Preguntarle algo a la IA' },
       { command: 'get', description: 'Descargar video (TikTok, Instagram, YouTube)' },
       { command: 'cloud', description: 'Explorar tus archivos guardados' },
-      { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' },
-      { command: 'finanza', description: 'Registrar ingreso o gasto (texto o voz)' },
-      { command: 'resumen_finanza', description: 'Resúmenes semanales, mensuales, anuales o por categoría' },
-      { command: 'estado', description: 'Ver métricas del sistema' }
+      { command: 'recordatorio', description: 'Programar recordatorio en lenguaje natural' }
     ]);
   } catch (err) {
     console.error('[WARN] No se pudieron registrar los comandos (setMyCommands):', err);
