@@ -16,10 +16,14 @@ export async function fetchWithRetry(
         timeout: 50000,
       });
       return Buffer.from(response.data);
-    } catch (error: any) {
-      const isTimeout = error.code === 'ECONNABORTED';
+    } catch (error: unknown) {
+      const isAxios = axios.isAxiosError(error);
+      const isTimeout = isAxios && error.code === 'ECONNABORTED';
+      const isNetworkError =
+        isAxios &&
+        (!error.response || (error.response.status >= 500 && error.response.status <= 504));
 
-      if (i < retries && isTimeout) {
+      if (i < retries && (isTimeout || isNetworkError)) {
         await sleep(delay);
         continue;
       }

@@ -1,8 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../types/bot.types.js';
-import { TikTokService } from '../services/tiktok.service.js';
-import { InstagramService } from '../services/instagram.service.js';
-import { YouTubeService } from '../services/youtube.service.js';
+import { downloadSocialVideo } from '../services/media-downloader.service.js';
 import { FileStorageService } from '../services/file-storage.service.js';
 import { userRegistry } from '../services/user-registry.service.js';
 import { validateDownloadUrl, SupportedPlatform, parseTikTokUrlMeta } from '../utils/validators.js';
@@ -10,9 +8,6 @@ import { commandTrigger, getCommandArgs } from '../utils/command-matcher.js';
 import { deleteCommandMessage } from '../utils/telegram-helpers.js';
 import { MESSAGES } from '../constants/messages.js';
 
-const tiktokService = new TikTokService();
-const instagramService = new InstagramService();
-const youtubeService = new YouTubeService();
 const storage = new FileStorageService();
 
 const PLATFORM_LABELS: Record<SupportedPlatform, string> = {
@@ -20,17 +15,6 @@ const PLATFORM_LABELS: Record<SupportedPlatform, string> = {
   instagram: '*Video de Instagram descargado*',
   youtube: '*Short de YouTube descargado*',
 };
-
-async function downloadByPlatform(
-  platform: SupportedPlatform,
-  url: string
-): Promise<Buffer> {
-  switch (platform) {
-    case 'tiktok': return tiktokService.downloadVideo(url);
-    case 'instagram': return instagramService.downloadVideo(url);
-    case 'youtube': return youtubeService.downloadVideo(url);
-  }
-}
 
 function buildFileName(platform: SupportedPlatform, url: string): string {
   if (platform === 'tiktok') {
@@ -80,7 +64,7 @@ export function registerGetCommand(bot: Telegraf<BotContext>): void {
       await ctx.sendChatAction('upload_video');
 
       const { url, platform } = validation as { url: string; platform: SupportedPlatform };
-      const buffer = await downloadByPlatform(platform, url);
+      const buffer = await downloadSocialVideo(url);
       const fileName = buildFileName(platform, url);
 
       await updateStatus(MESSAGES.GET_SENDING);
