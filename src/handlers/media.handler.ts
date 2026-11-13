@@ -47,7 +47,8 @@ async function handleDownload(
   ctx: BotContext,
   fileId: string,
   fileName: string,
-  category: MediaCategory
+  category: MediaCategory,
+  thumbFileId?: string
 ): Promise<void> {
   const userFolder = await resolveUserFolder(ctx);
   if (!userFolder) return;
@@ -59,6 +60,15 @@ async function handleDownload(
     await ctx.sendChatAction('upload_document');
     const fileUrl = await getFileUrl(ctx, fileId);
     const savedPath = await storage.downloadAndSave(fileUrl, fileName, category, userFolder, checkDuplicates);
+
+    if (thumbFileId) {
+      try {
+        const thumbUrl = await getFileUrl(ctx, thumbFileId);
+        await storage.downloadDirect(thumbUrl, `${savedPath}.thumb.jpg`);
+      } catch (tErr) {
+        console.warn(`[MediaHandler] No se pudo guardar la miniatura: ${tErr}`);
+      }
+    }
 
     console.info(`[MediaHandler] Archivo guardado con éxito (${category}): ${savedPath}`);
     await reactToMessage(ctx, '👍');
@@ -79,7 +89,13 @@ export function registerMediaHandlers(bot: Telegraf<BotContext>): void {
 
   bot.on('video', async (ctx) => {
     const video = ctx.message.video;
-    await handleDownload(ctx, video.file_id, video.file_name ?? `video_${Date.now()}.mp4`, 'Video');
+    await handleDownload(
+      ctx,
+      video.file_id,
+      video.file_name ?? `video_${Date.now()}.mp4`,
+      'Video',
+      video.thumbnail?.file_id
+    );
   });
 
   bot.on('voice', async (ctx) => {
@@ -88,15 +104,33 @@ export function registerMediaHandlers(bot: Telegraf<BotContext>): void {
 
   bot.on('audio', async (ctx) => {
     const audio = ctx.message.audio;
-    await handleDownload(ctx, audio.file_id, audio.file_name ?? `audio_${Date.now()}.mp3`, 'Audio');
+    await handleDownload(
+      ctx,
+      audio.file_id,
+      audio.file_name ?? `audio_${Date.now()}.mp3`,
+      'Audio',
+      audio.thumbnail?.file_id
+    );
   });
 
   bot.on('document', async (ctx) => {
     const doc = ctx.message.document;
-    await handleDownload(ctx, doc.file_id, doc.file_name ?? `documento_${Date.now()}`, 'Documentos');
+    await handleDownload(
+      ctx,
+      doc.file_id,
+      doc.file_name ?? `documento_${Date.now()}`,
+      'Documentos',
+      doc.thumbnail?.file_id
+    );
   });
 
   bot.on('video_note', async (ctx) => {
-    await handleDownload(ctx, ctx.message.video_note.file_id, `video_nota_${Date.now()}.mp4`, 'Video');
+    await handleDownload(
+      ctx,
+      ctx.message.video_note.file_id,
+      `video_nota_${Date.now()}.mp4`,
+      'Video',
+      ctx.message.video_note.thumbnail?.file_id
+    );
   });
 }

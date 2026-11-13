@@ -65,6 +65,12 @@ export class FileStorageService {
     return finalPath;
   }
 
+  async downloadDirect(url: string, destPath: string): Promise<void> {
+    const parentDir = path.dirname(destPath);
+    await fs.promises.mkdir(parentDir, { recursive: true });
+    await this.downloadFile(url, destPath);
+  }
+
   private async resolveUniqueFilePath(dir: string, fileName: string): Promise<string> {
     const ext = path.extname(fileName);
     const base = path.basename(fileName, ext);
