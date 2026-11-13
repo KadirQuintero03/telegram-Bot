@@ -4,6 +4,8 @@ export interface PhotosEntry {
   path: string;
   size?: number;
   modifiedAt?: number;
+  isFavorite?: boolean;
+  isArchived?: boolean;
 }
 
 export interface PhotosResponse {
@@ -14,4 +16,13 @@ export interface PhotosResponse {
 export interface CreateAlbumInput {
   owner: string;
   title: string;
+}
+
+export interface AlbumSummary {
+  id: string;
+  title: string;
+  path?: string;
+  itemCount: number;
+  coverPath?: string;
+  createdAt: number;
 }
